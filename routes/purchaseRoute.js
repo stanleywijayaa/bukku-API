@@ -7,12 +7,9 @@ router.route('/orders')
     .post(productOrderController.createOrder)
     .put(productOrderController.updateOrder)
     .patch(productOrderController.updateOrderStatus)
-    // .delete(productAttributesController.deleteProductAttribute)
+    .delete(productOrderController.deleteOrder)
 
 router.route('/orders/:id')
     .get(productOrderController.getOrder)
-
-// router.route('/batch')
-//     .post(productAttributesController.batchProductAttribute)
 
 module.exports = router;

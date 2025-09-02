@@ -135,7 +135,7 @@ const updateOrder = async(req, res) => {
 
 const updateOrderStatus = async (req, res) => {
     const {id, status, void_reason} = req.body
-    if (!id || !status) return res.status(400).json({ message: "ID and status are required"})
+    if (!id || !status) return res.status(400).json({ "message": "ID and status are required"})
     const allowedTransitions = {
         draft: ['pending_approval', 'ready'],
         pending_approval: ['ready'],
@@ -146,28 +146,45 @@ const updateOrderStatus = async (req, res) => {
         const order = await api.get(`/orders/${id}`)
         const currentStatus = order.data.status
         if (!allowedTransitions[currentStatus]?.includes(status)) {
-            return res.status(400).json({ message: `Invalid status transition from ${currentStatus} → ${status}`})
+            return res.status(400).json({ "message": `Invalid status transition from ${currentStatus} → ${status}`})
         }
         const payload = {status}
         if (status === 'void'){
-            if(!void_reason) return res.status(400).json({ message: "void_reason is required when voiding a transaction." });
+            if(!void_reason) return res.status(400).json({ "message": "void_reason is required when voiding a transaction." });
             payload.void_reason = void_reason
         }
         const result = await api.patch(`/orders/${id}`, payload)
         res.json(result.data)
     } catch (err) {
         if (err.response?.status === 404) {
-            return res.status(404).json({ message: `No purchase order matches ID ${id}` });
+            return res.status(404).json({ "message": `No purchase order matches ID ${id}` });
         }
         console.error("❌ Failed:", err.response?.data || err.message || err);
         res.status(500).json({ error: "Failed to update purchase order status" });
     }
 }
 
+const deleteOrder = async (req, res) => {
+    if (!req?.body?.id) return res.status(400).json({"message": "Order ID required"})
+    try {
+        await api.get(`/orders/${req.body.id}`)
+        const result = await api.delete(`/orders/${req.body.id}`)
+        res.json(result.data)
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No purchase order matches ID ${id}` });
+        }
+        console.error("❌ Failed:", err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to update purchase order status" });
+    }
+}
+
+
 module.exports = {
     getOrderList,
     getOrder,
     createOrder,
     updateOrder,
-    updateOrderStatus
+    updateOrderStatus,
+    deleteOrder
 };
