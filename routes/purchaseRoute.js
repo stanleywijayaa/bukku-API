@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const productOrderController = require('../logics/purchase/OrderLogic');
+const productOrderController = require('../logics/products/OrderLogic');
 
 router.route('/orders')
     .get(productOrderController.getOrderList)
-    // .post(productAttributesController.createProductAttribute)
+    .post(productOrderController.createOrder)
     // .put(productAttributesController.updateProductAttribute)
     // .delete(productAttributesController.deleteProductAttribute)
 
