@@ -2,13 +2,15 @@ const express = require("express");
 const router = express.Router();
 const quotation = require('../../logics/sales/quotation/quotationLogic')
 
+//Quotation route
 router.route('/quotation')
     .post(quotation.createQuotation)
-    .get()
+    .get(quotation.getQuotation)
     .put()
     .patch()
     .delete()
 
+//Sales Order route
 router.route('/salesorder')
     .post()
     .get()
@@ -16,6 +18,7 @@ router.route('/salesorder')
     .patch()
     .delete()
 
+//Delivery Order route
 router.route('/deliveryorder')
     .post()
     .get()
@@ -23,6 +26,7 @@ router.route('/deliveryorder')
     .patch()
     .delete()
 
+//Invoice route
 router.route('/invoice')
     .post()
     .get()
@@ -30,6 +34,7 @@ router.route('/invoice')
     .patch()
     .delete()
 
+//Credit Note route
 router.route('/creditnote')
     .post()
     .get()
@@ -37,6 +42,7 @@ router.route('/creditnote')
     .patch()
     .delete()
 
+//Payment route
 router.route('/payment')
     .post()
     .get()
@@ -44,6 +50,7 @@ router.route('/payment')
     .patch()
     .delete()
 
+//Refund route
 router.route('/refund')
     .post()
     .get()
@@ -51,6 +58,7 @@ router.route('/refund')
     .patch()
     .delete()
 
+//List subroute
 router.use('/all', (() => {
     const allRoute = express.Router()
     allRoute.get('/quotation', quotation.getQuotationList)
