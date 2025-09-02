@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const productOrderController = require('../logics/products/OrderLogic');
+const productOrderController = require('../logics/purchase/OrderLogic');
 
 router.route('/orders')
     .get(productOrderController.getOrderList)
