@@ -1,4 +1,4 @@
-const api = `${process.env.BUKKU_API_URL}sales/quotes`;
+const baseURL = `${process.env.BUKKU_API_URL}sales/`;
 const axios = require("axios");
 const dotenv = require('dotenv');
 dotenv.config();
@@ -12,35 +12,66 @@ const option = {
     }
 }
 
-//Create a sales quotation
-const createQuotation = async (req,res) => {
+//Create a sales
+const createSales = async (req,res) => {
+    //Determine the sales type
+    const { type } = req.params
+    const api = `${baseURL}${type}`
     //Get the parameters
     const data = req.body
     //Check for required parameters
-    if(!data?.contact_id ||
-        !data?.date ||
-        !data?.currency_code ||
-        !data?.exchange_rate ||
-        !data?.tax_mode ||
-        !data?.form_items ||
-        !data?.status
-    ){
-        return res.status(400).json({message: 'Missing required parameters'})
+    if (type == 'refunds') {
+        if(!data?.contact_id ||
+            !data?.date ||
+            !data?.currency_code ||
+            !data?.exchange_rate ||
+            !data?.deposit_items ||
+            !data?.status
+        ){
+            return res.status(400).json({message: 'Missing required parameters'})
+        }
+    }
+    else if (type == 'payments'){
+        if(!data?.contact_id ||
+            !data?.date ||
+            !data?.currency_code ||
+            !data?.exchange_rate ||
+            !data?.tax_mode ||
+            !data?.form_items ||
+            !data?.status
+        ){
+            return res.status(400).json({message: 'Missing required parameters'})
+        }
+    }
+    else{
+        if(!data?.contact_id ||
+            !data?.date ||
+            !data?.currency_code ||
+            !data?.exchange_rate ||
+            !data?.tax_mode ||
+            !data?.form_items ||
+            !data?.status
+        ){
+            return res.status(400).json({message: 'Missing required parameters'})
+        }
     }
 
     try {
-        //Create the quotation entry
+        //Create the sales entry
         const response = await axios.post(api, data, option)
         //Return the API response
         res.status(response.status).json({data: response.data})
     } catch (error) {
         console.log(error)
-        return res.status(500).json({message: "Failed creating quotation", error})
+        return res.status(500).json({message: `Failed creating quotation${type}`, error})
     }
 }
 
-//List all quotation
-const getQuotationList = async (req,res) => {
+//List all sales
+const getSalesList = async (req,res) => {
+    //Determine the sales type
+    const { type } = req.params
+    const api = `${baseURL}${type}`
     //Allowed parameters
     const allowedParams = [
         "search", "custom_search", "contact_id",
@@ -83,60 +114,97 @@ const getQuotationList = async (req,res) => {
     }
     catch (error){
         console.error(error)
-        return res.status(500).json({message: "Failed getting quotation", error})
+        return res.status(500).json({message: `Failed getting quotation${type}`, error})
     }
 }
 
-//Get a specific quotation
-const getQuotation = async (req,res) => {
+//Get a specific sales
+const getSales = async (req,res) => {
+    //Determine the sales type
+    const { type } = req.params
+    const api = `${baseURL}${type}`
     //Get the transaction id
     const id = req.query?.id
     //Check if the id exists
     if (!id) return res.status(400).json({message: 'ID is required'})
     
     try{
-        //Get the quotation
+        //Get the sales
         const response = await axios.get(`${api}/${id}`, option)
         const data = response.data
-        //Return the quotation
+        //Return the sales
         res.status(response.status).json({data})
     }
     catch (error){
         console.error(error)
-        return res.status(500).json({message: "Failed getting quotation", error})
+        return res.status(500).json({message: `Failed getting ${type}`, error})
     }
 }
 
-//Replace the quotation entry
-const updateQuotation = async (req,res) => {
+//Replace the sales entry
+const updateSales = async (req,res) => {
+    //Determine the sales type
+    const { type } = req.params
+    const api = `${baseURL}${type}`
     //Get the parameters
     const data = req.body
     //Check for required parameters
-    if(!data?.transactionId ||
-        !data?.contact_id ||
-        !data?.date ||
-        !data?.currency_code ||
-        !data?.exchange_rate ||
-        !data?.tax_mode ||
-        !data?.form_items ||
-        !data?.status
-    ){
-        return res.status(400).json({message: 'Missing required parameters'})
+    if (type == 'refunds') {
+        if(!data?.transactionId ||
+            !data?.contact_id ||
+            !data?.number ||
+            !data?.date ||
+            !data?.currency_code ||
+            !data?.exchange_rate ||
+            !data?.deposit_items
+        ){
+            return res.status(400).json({message: 'Missing required parameters'})
+        }
+    }
+    else if (type == 'payments'){
+        if(!data?.transactionId ||
+            !data?.contact_id ||
+            !data?.number ||
+            !data?.date ||
+            !data?.currency_code ||
+            !data?.exchange_rate ||
+            !data?.amount ||
+            !data?.deposit_items
+        ){
+            return res.status(400).json({message: 'Missing required parameters'})
+        }
+    }
+    else{
+        if(!data?.transactionId ||
+            !data?.contact_id ||
+            !data?.date ||
+            !data?.currency_code ||
+            !data?.exchange_rate ||
+            !data?.tax_mode ||
+            !data?.form_items ||
+            !data?.status
+        ){
+            return res.status(400).json({message: 'Missing required parameters'})
+        }
     }
 
     try {
         const { id, ...payload } = data
-        //Replace the quotation entry
+        //Replace the sales entry
         const response = await axios.put(`${api}/${id}`, payload, option)
         //Return the API response
         res.status(response.status).json({data: response.data})
     } catch (error) {
         console.log(error)
-        return res.status(500).json({message: "Failed updating quotation", error})
+        return res.status(500).json({message: `Failed updating ${type}`, error})
     }
 }
 
-const patchQuotation = async (req,res) => {
+//Update a sales status
+const patchSales = async (req,res) => {
+    //Determine the sales type
+    const { type } = req.params
+    const api = `${baseURL}${type}`
     //Get the transaction id
     const id = req.query?.id
     //Get the transaction status and reason if void
@@ -176,7 +244,7 @@ const patchQuotation = async (req,res) => {
             return res.status(400).json({message: 'Voiding transaction without reason'})
         }
 
-        //Patch the quotation
+        //Patch the sales
         const response = await axios.patch(`${api}/${id}`, param, option)
         const data = response.data
         //Return the response
@@ -184,11 +252,15 @@ const patchQuotation = async (req,res) => {
     }
     catch (error){
         console.error(error)
-        return res.status(500).json({message: "Failed patching quotation", error})
+        return res.status(500).json({message: `Failed patching ${type}`, error})
     }
 }
 
-const deleteQuotation = async (req,res) => {
+//Delete a sales entry
+const deleteSales = async (req,res) => {
+    //Determine the sales type
+    const { type } = req.params
+    const api = `${baseURL}${type}`
     //Get the transaction id
     const id = req.query?.id
     //Check if the id exists
@@ -200,22 +272,22 @@ const deleteQuotation = async (req,res) => {
         if (transaction.status != 'void' || transaction.status != 'draft'){
             return res.status(400).json({message: "Unable to delete transaction with status other than void or draft"})
         }
-        //Delete the quotation
+        //Delete the sales
         const response = await axios.delete(`${api}/${id}`, option)
-        //Return the quotation
+        //Return the sales
         res.status(response.status).json({data: true})
     }
     catch (error){
         console.error(error)
-        return res.status(500).json({message: "Failed deleting quotation", error})
+        return res.status(500).json({message: `Failed deleting ${type}`, error})
     }
 }
 
 module.exports = {
-    createQuotation,
-    getQuotationList,
-    getQuotation,
-    updateQuotation,
-    patchQuotation,
-    deleteQuotation,
+    createSales,
+    getSalesList,
+    getSales,
+    updateSales,
+    patchSales,
+    deleteSales
 }

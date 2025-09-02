@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const quotation = require('../../logics/sales/quotationLogic')
+//const quotation = require('../../logics/sales/quotationLogic');
+const sales = require('../../logics/sales/salesLogic')
 
+/*
 //Quotation route
 router.route('/quotation')
     .post(quotation.createQuotation)
@@ -57,7 +59,19 @@ router.route('/refund')
     .put()
     .patch()
     .delete()
+*/
 
+//Sales route
+router.route('/:type')
+    .post(sales.createSales)
+    .get(sales.getSales)
+    .put(sales.updateSales)
+    .patch(sales.patchSales)
+    .delete(sales.deleteSales)
+
+router.get(`/all/:type`, sales.getSalesList)
+
+/*
 //List subroute
 router.use('/all', (() => {
     const allRoute = express.Router()
@@ -70,5 +84,6 @@ router.use('/all', (() => {
     allRoute.get('/refund')
     return allRoute
 }))
+*/
 
 module.exports = router
