@@ -72,7 +72,79 @@ const getReceived = async(req, res) => {
     }
 }
 
+const createReceived = async(req, res) => {
+    const {
+        contact_id,
+        number,
+        number2,
+        date,
+        currency_code,
+        exchange_rate,
+        billing_party,
+        show_shipping,
+        shipping_party,
+        shipping_info,
+        tag_ids,
+        title,
+        description,
+        remarks,
+        tax_mode,
+        form_items,
+        status,
+        email,
+        files
+    } = req.body
+
+    if (!contact_id || !date || !currency_code || !exchange_rate || !tax_mode || !form_items || !status) {
+        return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const allowedTaxMode = ["inclusive", "exclusive"]
+    const allowedStatus = ["draft", "pending_approval", "ready"];
+
+    if (!allowedTaxMode.includes(tax_mode)) {
+        return res.status(400).json({ message: `Invalid tax_mode. Allowed: ${allowedTaxMode.join(", ")}` });
+    }
+
+    if (!allowedStatus.includes(status)) {
+        return res.status(400).json({ message: `Invalid status. Allowed: ${allowedStatus.join(", ")}` });
+    }
+
+    try {
+        const payload = {
+            contact_id,
+            date,
+            currency_code,
+            exchange_rate,
+            tax_mode,
+            form_items,
+            status
+        };
+        if (number && number.length <= 50) payload.number = number;
+        if (number2 && number2.length <= 50) payload.number2 = number2;
+        if (billing_party) payload.billing_party = billing_party;
+        if (show_shipping) payload.show_shipping = show_shipping;
+        if (shipping_party) payload.shipping_party = shipping_party;
+        if (shipping_info && shipping_info.length <= 100) payload.shipping_info = shipping_info;
+        if (tag_ids && tag_ids.length <= 4) payload.tag_ids = tag_ids;
+        if (title && title.length <= 255) payload.title = title;
+        if (description && description.length <= 255) payload.description = description;
+        if (remarks) payload.remarks = remarks;
+        if (email) payload.email = email;
+        if (files) payload.files = files;
+        if (reference_no) payload.reference_no = reference_no;
+
+        const response = await api.post('/goods_received_notes', payload)
+        res.status(201).json(response.data)
+    } catch (err) {
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to create received_notes" });
+    }
+}
+
+
 module.exports = {
     getReceivedList,
-    getReceived
+    getReceived,
+    createReceived
 }

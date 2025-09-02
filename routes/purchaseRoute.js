@@ -15,6 +15,7 @@ router.route('/orders/:id')
 
 router.route('/goods_received_notes')
     .get(receivedNotesController.getReceivedList)
+    .post(receivedNotesController.createReceived)
 
 router.route('/goods_received_notes/:id')
     .get(receivedNotesController.getReceived)
