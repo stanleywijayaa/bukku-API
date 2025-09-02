@@ -28,7 +28,7 @@ const getOrderList = async(req, res) => {
 const getOrder = async(req, res) => {
     try {
         const {id} = req.params
-        const response = await api.get(`orders/${id}`)
+        const response = await api.get(`/orders/${id}`)
         res.json(response.data)
     } catch (err){
         console.error('❌ Failed:', err.response?.data || err.message || err);
@@ -104,7 +104,7 @@ const updateOrder = async(req, res) => {
         const orderId = orderInfo.find(i => i.id === req.body.id)
         if (!orderId) return res.status(204).json({'message': `No order matches ID ${req.body.id}`})
     try {
-        const result = await api.put(`orders/${req.body.id}`,
+        const result = await api.put(`/orders/${req.body.id}`,
         {   
             number: req.body?.number,
             number2: req.body?.number2,
@@ -133,9 +133,41 @@ const updateOrder = async(req, res) => {
     }
 }
 
+const updateOrderStatus = async (req, res) => {
+    const {id, status, void_reason} = req.body
+    if (!id || !status) return res.status(400).json({ message: "ID and status are required"})
+    const allowedTransitions = {
+        draft: ['pending_approval', 'ready'],
+        pending_approval: ['ready'],
+        ready: ['void'],
+        void: ['ready']
+    }
+    try {
+        const order = await api.get(`/orders/${id}`)
+        const currentStatus = order.data.status
+        if (!allowedTransitions[currentStatus]?.includes(status)) {
+            return res.status(400).json({ message: `Invalid status transition from ${currentStatus} → ${status}`})
+        }
+        const payload = {status}
+        if (status === 'void'){
+            if(!void_reason) return res.status(400).json({ message: "void_reason is required when voiding a transaction." });
+            payload.void_reason = void_reason
+        }
+        const result = await api.patch(`/orders/${id}`, payload)
+        res.json(result.data)
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ message: `No purchase order matches ID ${id}` });
+        }
+        console.error("❌ Failed:", err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to update purchase order status" });
+    }
+}
+
 module.exports = {
     getOrderList,
     getOrder,
     createOrder,
-    updateOrder
+    updateOrder,
+    updateOrderStatus
 };

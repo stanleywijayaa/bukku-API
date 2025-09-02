@@ -6,6 +6,7 @@ router.route('/orders')
     .get(productOrderController.getOrderList)
     .post(productOrderController.createOrder)
     .put(productOrderController.updateOrder)
+    .patch(productOrderController.updateOrderStatus)
     // .delete(productAttributesController.deleteProductAttribute)
 
 router.route('/orders/:id')
