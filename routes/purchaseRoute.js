@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const productOrderController = require('../logics/purchase/OrderLogic');
+const receivedNotesController = require('../logics/purchase/ReceivedLogic')
 
 router.route('/orders')
     .get(productOrderController.getOrderList)
@@ -11,5 +12,9 @@ router.route('/orders')
 
 router.route('/orders/:id')
     .get(productOrderController.getOrder)
+
+router.route('/goods_received_notes')
+    .get(receivedNotesController.getReceivedList)
+
 
 module.exports = router;
