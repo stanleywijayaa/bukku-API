@@ -12,4 +12,7 @@ app.use(cookieParser())
 
 app.use('/purchases', require('./routes/purchaseRoute'))
 
+//Sales route
+app.use('/sales', require('./routes/sales/salesRoute'))
+
 app.listen(PORT, () => {console.log(`Server is running on port ${PORT}`);});
