@@ -139,6 +139,7 @@ const updateQuotation = async (req,res) => {
 const patchQuotation = async (req,res) => {
     //Get the transaction id
     const id = req.query?.id
+    //Get the transaction status and reason if void
     const param = req.body
     //Check if the id and status exists
     if (!id) return res.status(400).json({message: 'ID is required'})
@@ -151,6 +152,7 @@ const patchQuotation = async (req,res) => {
             return res.status(404).json({message: "Transaction ID is not found"})
         }
 
+        //Check for the status of the current transaction entry
         const currentStatus = transaction.data?.transaction?.status;
         if (!currentStatus) {
             return res.status(500).json({ message: "No transaction status found in existing transaction" });
@@ -182,7 +184,30 @@ const patchQuotation = async (req,res) => {
     }
     catch (error){
         console.error(error)
-        return res.status(500).json({message: "Failed getting quotation", error})
+        return res.status(500).json({message: "Failed patching quotation", error})
+    }
+}
+
+const deleteQuotation = async (req,res) => {
+    //Get the transaction id
+    const id = req.query?.id
+    //Check if the id exists
+    if (!id) return res.status(400).json({message: 'ID is required'})
+    
+    try{
+        //Check the status of the transaction
+        const transaction = await axios.get(`${api}/${id}`, option)
+        if (transaction.status != 'void' || transaction.status != 'draft'){
+            return res.status(400).json({message: "Unable to delete transaction with status other than void or draft"})
+        }
+        //Delete the quotation
+        const response = await axios.delete(`${api}/${id}`, option)
+        //Return the quotation
+        res.status(response.status).json({data: true})
+    }
+    catch (error){
+        console.error(error)
+        return res.status(500).json({message: "Failed deleting quotation", error})
     }
 }
 
@@ -192,4 +217,5 @@ module.exports = {
     getQuotation,
     updateQuotation,
     patchQuotation,
+    deleteQuotation,
 }

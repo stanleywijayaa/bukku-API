@@ -8,7 +8,7 @@ router.route('/quotation')
     .get(quotation.getQuotation)
     .put(quotation.updateQuotation)
     .patch(quotation.patchQuotation)
-    .delete()
+    .delete(quotation.deleteQuotation)
 
 //Sales Order route
 router.route('/salesorder')
