@@ -6,8 +6,8 @@ const quotation = require('../../logics/sales/quotation/quotationLogic')
 router.route('/quotation')
     .post(quotation.createQuotation)
     .get(quotation.getQuotation)
-    .put()
-    .patch()
+    .put(quotation.updateQuotation)
+    .patch(quotation.patchQuotation)
     .delete()
 
 //Sales Order route
