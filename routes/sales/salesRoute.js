@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const quotation = require('../../logics/sales/quotation/quotationLogic')
+const quotation = require('../../logics/sales/quotationLogic')
 
 //Quotation route
 router.route('/quotation')
