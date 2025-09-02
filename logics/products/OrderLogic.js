@@ -181,11 +181,11 @@ const updateOrder = async(req, res) => {
         if (req.body.email) payload.email = req.body.email;
         if (Array.isArray(req.body.files)) payload.files = req.body.files;
 
-        const result = await api.put(`/orders/${id}`, payload);
+        const result = await api.put(`/orders/${req.body.id}`, payload);
         res.json(result.data);
     } catch (err) {
         if (err.response?.status === 404) {
-            return res.status(404).json({ "message": `No purchase order matches ID ${id}` });
+            return res.status(404).json({ "message": `No purchase order matches ID ${req.body.id}` });
         }
         console.error('❌ Failed:', err.response?.data || err.message || err);
         res.status(500).json({ error: "Failed to update orders" });
@@ -231,7 +231,7 @@ const deleteOrder = async (req, res) => {
         res.json(result.data)
     } catch (err) {
         if (err.response?.status === 404) {
-            return res.status(404).json({ "message": `No purchase order matches ID ${id}` });
+            return res.status(404).json({ "message": `No purchase order matches ID ${req.body.id}` });
         }
         console.error("❌ Failed:", err.response?.data || err.message || err);
         res.status(500).json({ error: "Failed to update purchase order status" });
