@@ -5,7 +5,7 @@ const productOrderController = require('../logics/products/OrderLogic');
 router.route('/orders')
     .get(productOrderController.getOrderList)
     .post(productOrderController.createOrder)
-    // .put(productAttributesController.updateProductAttribute)
+    .put(productOrderController.updateOrder)
     // .delete(productAttributesController.deleteProductAttribute)
 
 router.route('/orders/:id')

@@ -96,8 +96,46 @@ const createOrder = async(req, res) => {
     }
 }
 
+const updateOrder = async(req, res) => {
+    if (!req?.body?.id) {
+            return res.status(400).json({ 'message': 'ID is required.'});
+        }
+        const orderInfo = await getOrder()
+        const orderId = orderInfo.find(i => i.id === req.body.id)
+        if (!orderId) return res.status(204).json({'message': `No order matches ID ${req.body.id}`})
+    try {
+        const result = await api.put(`orders/${req.body.id}`,
+        {   
+            number: req.body?.number,
+            number2: req.body?.number2,
+            date: req.body?.date,
+            currency_code: req.body?.currency_code,
+            exchange_rate: req.body?.exchange_rate,
+            billing_party: req.body?.billing_party,
+            show_shipping: req.body?.show_shipping,
+            shipping_party: req.body?.shipping_party,
+            shipping_info: req.body?.shipping_info,
+            tag_ids: req.body?.tag_ids,
+            term_id: req.body?.term_id,
+            title: req.body?.title,
+            description: req.body?.description,
+            remarks: req.body?.remarks,
+            tax_mode: req.body?.tax_mode,
+            form_items: req.body?.form_items,
+            status: req.body?.status,
+            email: req.body?.email,
+            files: req.body?.files
+        })
+        res.json(result.data)
+    } catch (err) {
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to update orders" });
+    }
+}
+
 module.exports = {
     getOrderList,
     getOrder,
-    createOrder
+    createOrder,
+    updateOrder
 };
