@@ -16,5 +16,8 @@ router.route('/orders/:id')
 router.route('/goods_received_notes')
     .get(receivedNotesController.getReceivedList)
 
+router.route('/goods_received_notes/:id')
+    .get(receivedNotesController.getReceived)
+
 
 module.exports = router;
