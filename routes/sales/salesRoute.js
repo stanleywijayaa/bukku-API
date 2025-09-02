@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
+const quotation = require('../../logics/sales/quotation/quotationLogic')
 
 router.route('/quotation')
-    .post()
+    .post(quotation.createQuotation)
     .get()
     .put()
     .patch()
@@ -52,7 +53,7 @@ router.route('/refund')
 
 router.use('/all', (() => {
     const allRoute = express.Router()
-    allRoute.get('/quotation')
+    allRoute.get('/quotation', quotation.getQuotationList)
     allRoute.get('/salesorder')
     allRoute.get('/deliveryorder')
     allRoute.get('/invoice')
