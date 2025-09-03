@@ -28,6 +28,7 @@ router.route('/goods')
     .get(billsController.getBillList)
     .post(billsController.createBill)
     .put(billsController.updateBill)
+    .patch(billsController.updateBillStatus)
 
 router.route('/goods/:id')
     .get(billsController.getBill)
