@@ -65,6 +65,6 @@ router.route('/refunds')
     .delete()
 
 router.route('/refunds/:id')
-    .get()
+    .get(refundController.getRefund)
 
 module.exports = router;

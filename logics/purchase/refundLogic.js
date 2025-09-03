@@ -51,6 +51,18 @@ const getRefundList = async(req, res) => {
     }
 }
 
+const getRefund = async(req, res) => {
+    try {
+        const {id} = req.params
+        const response = await api.get(`/refunds/${id}`)
+        res.json(response.data)
+    } catch (err){
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to fetch refunds" });
+    }
+}
+
 module.exports = {
-    getRefundList
+    getRefundList,
+    getRefund
 }
