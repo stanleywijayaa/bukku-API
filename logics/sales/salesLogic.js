@@ -18,41 +18,11 @@ const createSales = async (req,res) => {
     const { type } = req.params
     //Get the parameters
     const data = req.body
-    //Check for required parameters
-    if (type == 'refunds') {
-        if(!data?.contact_id ||
-            !data?.date ||
-            !data?.currency_code ||
-            !data?.exchange_rate ||
-            !data?.deposit_items ||
-            !data?.status
-        ){
-            return res.status(400).json({message: 'Missing required parameters'})
-        }
-    }
-    else if (type == 'payments'){
-        if(!data?.contact_id ||
-            !data?.date ||
-            !data?.currency_code ||
-            !data?.exchange_rate ||
-            !data?.tax_mode ||
-            !data?.form_items ||
-            !data?.status
-        ){
-            return res.status(400).json({message: 'Missing required parameters'})
-        }
-    }
-    else{
-        if(!data?.contact_id ||
-            !data?.date ||
-            !data?.currency_code ||
-            !data?.exchange_rate ||
-            !data?.tax_mode ||
-            !data?.form_items ||
-            !data?.status
-        ){
-            return res.status(400).json({message: 'Missing required parameters'})
-        }
+    if(!data) return res.status(400).json({message: "Missing request body"})
+    //Request validation
+    const valid = verifyCreateRequest(data, type)
+    if (!valid.bool){
+        return res.status(valid.status).json({message: valid.message})
     }
 
     try {
@@ -275,9 +245,86 @@ const deleteSales = async (req,res) => {
     }
 }
 
-function verifyRequest(body,type){
-    if (type === 'quotes' || type === 'orders' || type === 'delivery_orders' || type === 'invoice' || type === 'credit_notes'){
+function verifyCreateRequest(data, type){
+    //Check for required general parameters
+    if(!data.contact_id ||
+        !data.date ||
+        !data.currency_code ||
+        !data.exchange_rate ||
+        !data.status)
+    {
+        return {bool: false, status: 400, message: "Missing required parameter(s)"}
+    }
+    //Validate general parameters
+    else{
+        if(data.tag_ids && data.tag_ids.length > 4) return {bool: false, status: 400, message: "Invalid tag"}
+        if(!(/^\d{4}-\d{2}-\d{2}$/.test(data.date))) return {bool: false, status: 400, message: "Invalid date"}
+        if(data.description && data.description.length > 255) return {bool: false, status: 400, message: "Invalid description"}
+        if(!(new Intl.NumberFormat("en", {style: 'currency', currency: data.currency_code}))) return {bool: false, status: 400, message: "Invalid currency code"}
+        if(!(["draft", "pending_approval", "ready"].includes(data.status))) return {bool: false, status: 400, message: "Invalid status"}
+        if((data.number || data.number2) && (data.number.length > 50 || data.number2.length > 50)) return {bool: false, status: 400, message: "Invalid transaction or reference number"}
+    }
 
+    //Check for type-specific parameters
+    if (["quotes", "orders", "delivery_orders", "invoice", "credit_notes"].includes(type)){
+        if(!data.tax_mode || !data.form_items){
+            return {bool: false, status: 400, message: "Missing required parameter(s)"}
+        }
+        else{
+            if(data.shipping_info && data.shipping_info.length > 100) return {bool: false, status: 400, message: "Invalid shipping info"}
+            if(data.title && data.title.length > 255) return {bool: false, status: 400, message: "Invalid title"}
+            if(!(data.tax_mode === "inclusive" || data.tax_mode === "exclusive")) return {bool: false, status: 400, message: "Invalid tax mode"}
+            return {bool: true}
+        }
+    }
+    else if (type === 'payments'){
+        if(!data?.tax_mode || !data?.form_items){
+            return {bool: false, status: 400, message: "Missing required parameter(s)"}
+        }
+    }
+    else if (type === 'refunds'){
+        if(!data?.deposit_items){
+            return {bool: false, status: 400, message: "Missing required parameter(s)"}
+        }
+    }
+    else {
+        return {bool: false, status: 404, message: "Invalid request"}
+    }
+}
+
+function verifyGetRequest(body,type){
+    if (type === 'quotes' || type === 'orders' || type === 'delivery_orders' || type === 'invoice' || type === 'credit_notes'){
+        
+    }
+    else if (type === 'payments'){
+
+    }
+    else if (type === 'refunds'){
+
+    }
+    else {
+        return null
+    }
+}
+
+function verifyUpdateRequest(body,type){
+    if (type === 'quotes' || type === 'orders' || type === 'delivery_orders' || type === 'invoice' || type === 'credit_notes'){
+        
+    }
+    else if (type === 'payments'){
+
+    }
+    else if (type === 'refunds'){
+
+    }
+    else {
+        return null
+    }
+}
+
+function verifyPatchRequest(body,type){
+    if (type === 'quotes' || type === 'orders' || type === 'delivery_orders' || type === 'invoice' || type === 'credit_notes'){
+        
     }
     else if (type === 'payments'){
 
