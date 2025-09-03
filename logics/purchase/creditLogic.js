@@ -56,7 +56,82 @@ const getCredit = async(req, res) => {
     }
 }
 
+const createCredit = async(req, res) => {
+    const {
+        contact_id,
+        number,
+        number2,
+        date,
+        currency_code,
+        exchange_rate,
+        billing_party,
+        tag_ids,
+        description,
+        remarks,
+        tax_mode,
+        form_items,
+        link_items,
+        status,
+        files,
+        customs_form_no,
+        customs_k2_form_no,
+        incoterms,
+        myinvois_action
+    } = req.body
+
+    if (!contact_id || !date || !currency_code || !exchange_rate || !tax_mode || !form_items || !status) {
+        return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const allowedTaxMode = ["inclusive", "exclusive"]
+    const allowedStatus = ["draft", "pending_approval", "ready"];
+    const allowedInvois = ["NORMAL", "VALIDATE", "EXTERNAL"]
+
+    if (!allowedTaxMode.includes(tax_mode)) {
+        return res.status(400).json({ message: `Invalid tax_mode. Allowed: ${allowedTaxMode.join(", ")}` });
+    }
+
+    if (!allowedStatus.includes(status)) {
+        return res.status(400).json({ message: `Invalid status. Allowed: ${allowedStatus.join(", ")}` });
+    }
+
+    if (!allowedInvois.includes(myinvois_action)) {
+        return res.status(400).json({ message: `Invalid invois. Allowed: ${allowedStatus.join(", ")}` });
+    }
+
+    try {
+        const payload = {
+            contact_id,
+            date,
+            currency_code,
+            exchange_rate,
+            tax_mode,
+            form_items,
+            status
+        };
+        if (number && number.length <= 50) payload.number = number;
+        if (number2 && number2.length <= 50) payload.number2 = number2;
+        if (billing_party) payload.billing_party = billing_party;
+        if (tag_ids && tag_ids.length <= 4) payload.tag_ids = tag_ids;
+        if (description && description.length <= 255) payload.description = description;
+        if (remarks) payload.remarks = remarks;
+        if (link_items) payload.link_items = link_items
+        if (files) payload.files = files;
+        if (customs_form_no) payload.customs_form_no = customs_form_no
+        if (customs_k2_form_no) payload.customs_k2_form_no = customs_k2_form_no
+        if (incoterms) payload.incoterms = incoterms
+        if (myinvois_action && allowedInvois.includes(myinvois_action)) payload.myinvois_action = myinvois_action
+
+        const response = await api.post('/credit_notes', payload)
+        res.status(201).json(response.data)
+    } catch (err) {
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to create credit" });
+    }
+}
+
 module.exports = {
     getCreditList,
-    getCredit
+    getCredit,
+    createCredit
 }
