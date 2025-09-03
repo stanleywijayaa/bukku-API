@@ -1,8 +1,18 @@
-const api = "https://api.bukku.fyi/banking/incomes";
 const axios = require("axios");
+const url = process.env.BUKKU_API_URL;
+const subdomain = process.env.SUBDOMAIN
+const accessToken = process.env.BUKKU_ACCESS_TOKEN;
 const dotenv = require('dotenv');
 dotenv.config();
 
+const api = axios.create({
+    baseURL: `${url}/banking/incomes`,
+    headers: {
+    "Authorization": `Bearer ${accessToken}`,
+    "Company-Subdomain": subdomain,
+    "Accept": "application/json"
+  }
+});
 //create
 const createMoneyIn = async(req, res) => {
     const{ 
@@ -68,12 +78,7 @@ const createMoneyIn = async(req, res) => {
     if(files)payload.files = files;
 
     try {
-        const response = await axios.post(api, payload, {
-            headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.BUKKU_ACCESS_TOKEN}`,
-          }
-        })
+        const response = await axios.post(api, payload)
         res.json(response.data);
     } catch (err) {
         console.error(err)
