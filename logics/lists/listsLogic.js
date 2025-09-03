@@ -22,12 +22,12 @@ const getLists = async (req, res) => {
     });
   }
 
-  const bukkuPayload = {
+  const payload = {
     filter: { type: lists },
   };
 
   try {
-    const response = await axios.post(api, bukkuPayload, {
+    const response = await axios.post(api, payload, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${process.env.BUKKU_ACCESS_TOKEN}`,

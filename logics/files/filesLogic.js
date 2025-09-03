@@ -5,6 +5,9 @@ const FormData = require("form-data");
 const fs = require("fs");
 dotenv.config();
 
+const PAGE_SIZE = 20;
+const allowedTypes = ["IMAGE", "VIDEO", "EXCEL", "PDF"];
+
 const uploadFile = async(req, res) => {
     // req.file comes from multer middleware
     if (!req.file) {
@@ -35,32 +38,31 @@ const uploadFile = async(req, res) => {
 
 const readFileLists = async (req, res) => {
     const { search, type, page } = req.query;
-
-    // Build filters correctly based on Bukku docs
-    const filters = {};
-    if (search) filters.search = search;
-    if (type) filters.type = type;
-
-    // Build payload
-    const payload = {
-      page: page ? parseInt(page) : 1,
-      pageSize: PAGE_SIZE,
+    
+    // Build query params
+    const params = {
+      page: page ? parseInt(page, 10) : 1,
+      page_size: PAGE_SIZE,
     };
-
-    if (Object.keys(filters).length > 0) {
-      payload.filter = filters;
-    }
-    try {
-    const response = await axios.post(api, payload, {
+    
+    if (search) params.search = search;
+    
+    if (type && allowedTypes.includes(type)) params.type = type;
+  try {
+    // Call Bukku API
+    const response = await axios.get(api, {
+      params,
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${process.env.BUKKU_ACCESS_TOKEN}`,
       },
     });
 
     res.json(response.data);
   } catch (err) {
-    console.error("Failed to fetch file list:", err.response?.data || err.message || err);
+    console.error(
+      "Failed to fetch file list:",
+      err.response?.data || err.message || err
+    );
     res.status(500).json({
       message: "Failed to fetch file list",
       error: err.response?.data || err.message,

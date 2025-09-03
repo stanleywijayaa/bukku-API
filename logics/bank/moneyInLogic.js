@@ -6,13 +6,20 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const api = axios.create({
-    baseURL: `${url}/banking/incomes`,
+    baseURL: `${url}/banking`,
     headers: {
     "Authorization": `Bearer ${accessToken}`,
     "Company-Subdomain": subdomain,
     "Accept": "application/json"
   }
 });
+
+const allowedTaxMode = ["inclusive", "exclusive"];
+const allowedStatus = ["draft", "pending_approval", "ready", "void"];
+const allowedEmailStatus = ["UNSENT", "PENDING", "SENT", "BOUNCED", "OPENED", "VIEWED"];
+const allowedSortBy = ["number", "number2", "date", "contact_name", "amount", "description", "created_at"];
+const allowedSortDir = ["asc", "desc"];
+
 //create
 const createMoneyIn = async(req, res) => {
     const{ 
@@ -39,9 +46,6 @@ const createMoneyIn = async(req, res) => {
     if(!number || !date || !currency_code || !exchange_rate || !bank_items || !rounding_on || !status || !deposit_items){
         return res.status(400).json({message: 'please fill in the required data'});
     }
-
-    const allowedTaxMode = ["inclusive", "exclusive"]
-    const allowedStatus = ["draft", "pending_approval", "ready", "void"];
 
     if (!allowedTaxMode.includes(tax_mode)) {
         return res.status(400).json({ message: `Invalid tax_mode. Allowed: ${allowedTaxMode.join(", ")}` });
@@ -78,16 +82,31 @@ const createMoneyIn = async(req, res) => {
     if(files)payload.files = files;
 
     try {
-        const response = await axios.post(api, payload)
+        const response = await api.post('/incomes', payload)
         res.json(response.data);
     } catch (err) {
-        console.error(err)
+        console.error('Failed:', err.response?.data || err.message || err)
         res.status(500).json({message: 'error creating money in entry'})
     }
 } 
 
 //get all list (but can search based on parameters)
+const getMoneyInList = async(req, res) => {
+    const {
+        date_from,
+        date_to,
+        search,
+        contact_id,
+        account_id,
+        status,
+        email_status,
+        page = 1,
+        page_size = 30,
+        sort_by,
+        sort_dir
+    } = req.query
 
+}
 //get list
 
 //update (put)
