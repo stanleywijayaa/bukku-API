@@ -278,13 +278,19 @@ function verifyCreateRequest(data, type){
         }
     }
     else if (type === 'payments'){
-        if(!data?.tax_mode || !data?.form_items){
+        if(!data.amount || !data.deposit_items){
             return {bool: false, status: 400, message: "Missing required parameter(s)"}
+        }
+        else{
+            return {bool: true}
         }
     }
     else if (type === 'refunds'){
         if(!data?.deposit_items){
             return {bool: false, status: 400, message: "Missing required parameter(s)"}
+        }
+        else{
+            return {bool: true}
         }
     }
     else {
