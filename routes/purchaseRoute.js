@@ -5,6 +5,7 @@ const receivedNotesController = require('../logics/purchase/receivedLogic')
 const billsController = require('../logics/purchase/billLogic')
 const creditController = require('../logics/purchase/creditLogic')
 const paymentController = require('../logics/purchase/paymentLogic')
+const refundController = require('../logics/purchase/refundLogic')
 
 router.route('/orders')
     .get(OrderController.getOrderList)
@@ -55,5 +56,15 @@ router.route('/payments')
 
 router.route('/payments/:id')
     .get(paymentController.getPayment)
+
+router.route('/refunds')
+    .get(refundController.getRefundList)
+    .post()
+    .put()
+    .patch()
+    .delete()
+
+router.route('/refunds/:id')
+    .get()
 
 module.exports = router;
