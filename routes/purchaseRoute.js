@@ -3,6 +3,7 @@ const router = express.Router();
 const OrderController = require('../logics/purchase/orderLogic');
 const receivedNotesController = require('../logics/purchase/receivedLogic')
 const billsController = require('../logics/purchase/billLogic')
+const creditController = require('../logics/purchase/creditLogic')
 
 router.route('/orders')
     .get(OrderController.getOrderList)
@@ -34,4 +35,13 @@ router.route('/goods')
 router.route('/goods/:id')
     .get(billsController.getBill)
 
+router.route('/credit_notes')
+    .get(creditController.getCreditList)
+    .post()
+    .put()
+    .patch()
+    .delete()
+
+router.route('/credit_notes/:id')
+    .get()
 module.exports = router;
