@@ -234,7 +234,7 @@ const updateBillStatus = async (req, res) => {
 }
 
 const deleteBill = async (req, res) => {
-    if (!req?.body?.id) return res.status(400).json({"message": "Order ID required"})
+    if (!req?.body?.id) return res.status(400).json({"message": "Delete ID required"})
     try {
         const bill = await api.get(`/bills/${req.body.id}`)
         const status = bill.data?.status

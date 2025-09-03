@@ -40,7 +40,7 @@ router.route('/credit_notes')
     .post(creditController.createCredit)
     .put(creditController.updateCredit)
     .patch(creditController.updateCreditStatus)
-    .delete()
+    .delete(creditController.deleteCredit)
 
 router.route('/credit_notes/:id')
     .get(creditController.getCredit)
