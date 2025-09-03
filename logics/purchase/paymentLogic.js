@@ -180,10 +180,33 @@ const updatePaymentStatus = async (req, res) => {
     }
 }
 
+const deletePayment = async (req, res) => {
+    if (!req?.body?.id) return res.status(400).json({"message": "Payment ID required"})
+    try {
+        const payment = await api.get(`/payments/${req.body.id}`)
+        const status = payment.data?.status
+        if (!['draft', 'void'].includes(status)) {
+            return res.status(400).json({
+                "message": `Bill with ID ${req.body.id} cannot be deleted because its status is '${status}'. Only 'draft' or 'void' bills can be deleted.`
+            });
+        }
+
+        const result = await api.delete(`/payments/${req.body.id}`)
+        res.json(result.data)
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No purchase payment matches ID ${req.body.id}` });
+        }
+        console.error("❌ Failed:", err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to delete purchase payment status" });
+    }
+}
+
 module.exports = {
     getPaymentList,
     getPayment,
     createPayment,
     updatePayment,
-    updatePaymentStatus
+    updatePaymentStatus,
+    deletePayment
 }

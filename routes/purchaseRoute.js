@@ -51,7 +51,7 @@ router.route('/payments')
     .post(paymentController.createPayment)
     .put(paymentController.updatePayment)
     .patch(paymentController.updatePaymentStatus)
-    .delete()
+    .delete(paymentController.deletePayment)
 
 router.route('/payments/:id')
     .get(paymentController.getPayment)
