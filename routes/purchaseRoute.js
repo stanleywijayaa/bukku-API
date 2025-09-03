@@ -59,7 +59,7 @@ router.route('/payments/:id')
 
 router.route('/refunds')
     .get(refundController.getRefundList)
-    .post()
+    .post(refundController.createRefund)
     .put()
     .patch()
     .delete()

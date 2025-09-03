@@ -62,7 +62,62 @@ const getRefund = async(req, res) => {
     }
 }
 
+const createRefund = async(req, res) => {
+    const {
+        contact_id,
+        number,
+        number2,
+        date,
+        currency_code,
+        exchange_rate,
+        tag_ids,
+        description,
+        remarks,
+        link_items,
+        deposit_items,
+        status,
+        email,
+        files
+    } = req.body
+
+    if (!contact_id || !date || !currency_code || !exchange_rate || !deposit_items || !status) {
+        return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const allowedStatus = ["draft", "pending_approval", "ready"];
+
+    if (!allowedStatus.includes(status)) {
+        return res.status(400).json({ message: `Invalid status. Allowed: ${allowedStatus.join(", ")}` });
+    }
+
+    try {
+        const payload = {
+            contact_id,
+            date,
+            currency_code,
+            exchange_rate,
+            deposit_items,
+            status
+        };
+        if (number && number.length <= 50) payload.number = number;
+        if (number2 && number2.length <= 50) payload.number2 = number2;
+        if (tag_ids && tag_ids.length <= 4) payload.tag_ids = tag_ids;
+        if (description && description.length <= 255) payload.description = description;
+        if (remarks) payload.remarks = remarks;
+        if (link_items) payload.link_items = link_items
+        if (email) payload.email = email;
+        if (files) payload.files = files;
+
+        const response = await api.post('/refunds', payload)
+        res.status(201).json(response.data)
+    } catch (err) {
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to create refunds" });
+    }
+}
+
 module.exports = {
     getRefundList,
-    getRefund
+    getRefund,
+    createRefund
 }
