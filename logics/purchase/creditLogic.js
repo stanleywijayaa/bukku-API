@@ -45,6 +45,18 @@ const getCreditList = async (req, res) => {
     }
 }
 
+const getCredit = async(req, res) => {
+    try {
+        const {id} = req.params
+        const response = await api.get(`/credit_notes/${id}`)
+        res.json(response.data)
+    } catch (err){
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to fetch credit" });
+    }
+}
+
 module.exports = {
-    getCreditList
+    getCreditList,
+    getCredit
 }

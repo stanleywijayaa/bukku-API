@@ -43,5 +43,5 @@ router.route('/credit_notes')
     .delete()
 
 router.route('/credit_notes/:id')
-    .get()
+    .get(creditController.getCredit)
 module.exports = router;
