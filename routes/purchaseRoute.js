@@ -1,14 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const productOrderController = require('../logics/purchase/OrderLogic');
+const OrderController = require('../logics/purchase/OrderLogic');
 const receivedNotesController = require('../logics/purchase/ReceivedLogic')
+const billsController = require('../logics/purchase/BillLogic')
 
 router.route('/orders')
-    .get(productOrderController.getOrderList)
-    .post(productOrderController.createOrder)
-    .put(productOrderController.updateOrder)
-    .patch(productOrderController.updateOrderStatus)
-    .delete(productOrderController.deleteOrder)
+    .get(OrderController.getOrderList)
+    .post(OrderController.createOrder)
+    .put(OrderController.updateOrder)
+    .patch(OrderController.updateOrderStatus)
+    .delete(OrderController.deleteOrder)
 
 router.route('/orders/:id')
     .get(productOrderController.getOrder)
@@ -23,5 +24,7 @@ router.route('/goods_received_notes')
 router.route('/goods_received_notes/:id')
     .get(receivedNotesController.getReceived)
 
+router.route('/goods')
+    .get(billsController.getBillList)
 
 module.exports = router;
