@@ -1,6 +1,6 @@
 const express = require("express");
 const multer = require("multer");
-const filesController = require("../..logics/files/filesLogic");
+const filesController = require("../logics/files/filesLogic");
 const upload = multer({ dest: "uploads/" });
 const router = express.Router();
 
