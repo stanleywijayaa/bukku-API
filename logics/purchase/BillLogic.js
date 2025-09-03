@@ -154,9 +154,69 @@ const createBill = async(req, res) => {
     }
 }
 
+const updateBill = async(req, res) => {
+    if (!req?.body?.id) return res.status(400).json({ 'message': 'ID is required.'});
+    try {
+        await api.get(`/bills/${req.body.id}`);
+
+        const allowedMode = ["cash", "credit", "claim"]
+        const allowedTaxMode = ["inclusive", "exclusive"];
+        const allowedInvois = ["NORMAL", "VALIDATE", "EXTERNAL"]
+        const payload = {};
+
+        if (req.body.payment_mode) {
+            if (!allowedMode.includes(req.body.payment_mode)){
+                return res.status(400).json({message: "Invalid payment_mode value"})
+            }
+            payload.payment_mode = req.body.payment_mode
+        }
+        if (req.body.contact2_id) payload.contact2_id = req.body.contact2_id
+        if (req.body.number && req.body.number.length <= 50) payload.number = req.body.number;
+        if (req.body.number2 && req.body.number2.length <= 50) payload.number2 = req.body.number2;
+        if (req.body.date) payload.date = req.body.date;
+        if (req.body.term_id) payload.term_id = req.body.term_id;
+        if (req.body.due_date) payload.due_date = req.body.due_date
+        if (req.body.currency_code) payload.currency_code = req.body.currency_code;
+        if (typeof req.body.exchange_rate === "number") payload.exchange_rate = req.body.exchange_rate;
+        if (req.body.billing_party) payload.billing_party = req.body.billing_party;
+        if (Array.isArray(req.body.tag_ids) && req.body.tag_ids.length <= 4) payload.tag_ids = req.body.tag_ids;
+        if (req.body.description && req.body.description.length <= 255) payload.description = req.body.description;
+        if (req.body.remarks) payload.remarks = req.body.remarks;
+        if (req.body.tax_mode) {
+            if (!allowedTaxMode.includes(req.body.tax_mode)) {
+                return res.status(400).json({ message: "Invalid tax_mode value" });
+            }
+            payload.tax_mode = req.body.tax_mode;
+        }
+        if (Array.isArray(req.body.form_items) && req.body.form_items.length > 0) {
+            payload.form_items = req.body.form_items;
+        }
+        if (req.body.deposit_items) payload.deposit_items = req.body.deposit_items
+        if (Array.isArray(req.body.files)) payload.files = req.body.files;
+        if (req.body.customs_form_no) payload.customs_form_no = req.body.customs_form_no
+        if (req.body.customs_k2_form_no) payload.customs_k2_form_no = req.body.customs_k2_form_no
+        if (req.body.incoterms) payload.incoterms = req.body.incoterms
+        if (req.body.myinvois_action) {
+            if (!allowedInvois.includes(req.body.myinvois_action)){
+                return res.status(400).json({message: "Invalid invois"})
+            }
+            payload.myinvois_action = req.body.myinvois_action
+        }
+
+        const result = await api.put(`/bills/${req.body.id}`, payload);
+        res.json(result.data);
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No purchase bills matches ID ${req.body.id}` });
+        }
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to update bills" });
+    }
+}
 
 module.exports = {
     getBillList,
     getBill,
-    createBill
+    createBill,
+    updateBill
 }
