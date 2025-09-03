@@ -121,7 +121,7 @@ const getMoneyInList = async (req, res) => {
     if (email_status && allowedEmailStatus.includes(email_status)) params.email_status = email_status;
     if (sort_by && allowedSortBy.includes(sort_by)) params.sort_by = sort_by;
     if (sort_dir && allowedSortDir.includes(sort_dir)) params.sort_dir = sort_dir;
-    
+
     try {
     // ✅ Make request to Bukku
     const response = await api.get("/incomes", {params});
@@ -135,7 +135,21 @@ const getMoneyInList = async (req, res) => {
     });
   }
 };
+
 //get list
+const getMoneyIn = async(req, res) => {
+    const { transactionId } = req.params;
+    if(!transactionId){
+        return res.status(400).json({message: 'transaction id is required'});
+    }
+    try{
+        const response = await api.get(`/incomes/${transactionId}`);
+        res.json(response.data);
+    }catch(err){
+        console.error('Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to fetch money in record" });
+    }
+}
 
 //update (put)
 
