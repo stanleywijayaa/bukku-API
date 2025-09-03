@@ -220,10 +220,27 @@ const updateReceivedStatus = async (req, res) => {
     }
 }
 
+const deleteReceived = async (req, res) => {
+    if (!req?.body?.id) return res.status(400).json({"message": "Received ID required"})
+    try {
+        await api.get(`/goods_received_notes/${req.body.id}`)
+        const result = await api.delete(`/goods_received_notes/${req.body.id}`)
+        res.json(result.data)
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No purchase goods matches ID ${req.body.id}` });
+        }
+        console.error("❌ Failed:", err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to delete purchase goods status" });
+    }
+}
+
+
 module.exports = {
     getReceivedList,
     getReceived,
     createReceived,
     updateReceived,
-    updateReceivedStatus
+    updateReceivedStatus,
+    deleteReceived
 }

@@ -234,7 +234,7 @@ const deleteOrder = async (req, res) => {
             return res.status(404).json({ "message": `No purchase order matches ID ${req.body.id}` });
         }
         console.error("❌ Failed:", err.response?.data || err.message || err);
-        res.status(500).json({ error: "Failed to update purchase order status" });
+        res.status(500).json({ error: "Failed to delete purchase order status" });
     }
 }
 

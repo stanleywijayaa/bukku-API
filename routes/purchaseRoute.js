@@ -18,6 +18,7 @@ router.route('/goods_received_notes')
     .post(receivedNotesController.createReceived)
     .put(receivedNotesController.updateReceived)
     .patch(receivedNotesController.updateReceivedStatus)
+    .delete(receivedNotesController.deleteReceived)
 
 router.route('/goods_received_notes/:id')
     .get(receivedNotesController.getReceived)
