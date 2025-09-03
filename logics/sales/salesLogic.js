@@ -1,22 +1,21 @@
-const baseURL = `${process.env.BUKKU_API_URL}sales/`;
 const axios = require("axios");
 const dotenv = require('dotenv');
 dotenv.config();
-const apiToken = process.env.BUKKU_ACCESS_TOKEN
-const option = {
+
+const api = axios.create({
+    baseURL: `${process.env.BUKKU_API_URL}sales/`,
     headers: {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
-        Authorization: `bearer ${apiToken}`,
+        Authorization: `bearer ${process.env.BUKKU_ACCESS_TOKEN}`,
         'Company-Subdomain': process.env.SUBDOMAIN
     }
-}
+})
 
 //Create a sales
 const createSales = async (req,res) => {
     //Determine the sales type
     const { type } = req.params
-    const api = `${baseURL}${type}`
     //Get the parameters
     const data = req.body
     //Check for required parameters
@@ -58,7 +57,7 @@ const createSales = async (req,res) => {
 
     try {
         //Create the sales entry
-        const response = await axios.post(api, data, option)
+        const response = await api.post(type, data)
         //Return the API response
         res.status(response.status).json({data: response.data})
     } catch (error) {
@@ -71,7 +70,6 @@ const createSales = async (req,res) => {
 const getSalesList = async (req,res) => {
     //Determine the sales type
     const { type } = req.params
-    const api = `${baseURL}${type}`
     //Allowed parameters
     const allowedParams = [
         "search", "custom_search", "contact_id",
@@ -96,10 +94,7 @@ const getSalesList = async (req,res) => {
             //Update page
             params.page = page
             //Get the data
-            const response = await axios.get(api, {
-                ...option,
-                params
-            })
+            const response = await api.get(type, { params })
             const result = response.data
             data.push(...result.transactions)
             //Get the total number of page
@@ -122,7 +117,6 @@ const getSalesList = async (req,res) => {
 const getSales = async (req,res) => {
     //Determine the sales type
     const { type } = req.params
-    const api = `${baseURL}${type}`
     //Get the transaction id
     const id = req.query?.id
     //Check if the id exists
@@ -130,7 +124,7 @@ const getSales = async (req,res) => {
     
     try{
         //Get the sales
-        const response = await axios.get(`${api}/${id}`, option)
+        const response = await api.get(`${type}/${id}`)
         const data = response.data
         //Return the sales
         res.status(response.status).json({data})
@@ -145,7 +139,6 @@ const getSales = async (req,res) => {
 const updateSales = async (req,res) => {
     //Determine the sales type
     const { type } = req.params
-    const api = `${baseURL}${type}`
     //Get the parameters
     const data = req.body
     //Check for required parameters
@@ -191,7 +184,7 @@ const updateSales = async (req,res) => {
     try {
         const { id, ...payload } = data
         //Replace the sales entry
-        const response = await axios.put(`${api}/${id}`, payload, option)
+        const response = await api.put(`${type}/${id}`, payload)
         //Return the API response
         res.status(response.status).json({data: response.data})
     } catch (error) {
@@ -204,7 +197,6 @@ const updateSales = async (req,res) => {
 const patchSales = async (req,res) => {
     //Determine the sales type
     const { type } = req.params
-    const api = `${baseURL}${type}`
     //Get the transaction id
     const id = req.query?.id
     //Get the transaction status and reason if void
@@ -215,7 +207,7 @@ const patchSales = async (req,res) => {
     
     try{
         //Check if the transaction exists
-        const transaction = await axios.get(`${api}/${id}`, option)
+        const transaction = await api.get(`${type}/${id}`)
         if (transaction.status != 200 || !transaction.data){
             return res.status(404).json({message: "Transaction ID is not found"})
         }
@@ -245,7 +237,7 @@ const patchSales = async (req,res) => {
         }
 
         //Patch the sales
-        const response = await axios.patch(`${api}/${id}`, param, option)
+        const response = await api.patch(`${type}/${id}`, param)
         const data = response.data
         //Return the response
         res.status(response.status).json({data})
@@ -268,18 +260,33 @@ const deleteSales = async (req,res) => {
     
     try{
         //Check the status of the transaction
-        const transaction = await axios.get(`${api}/${id}`, option)
+        const transaction = await api.get(`${type}/${id}`)
         if (transaction.status != 'void' || transaction.status != 'draft'){
             return res.status(400).json({message: "Unable to delete transaction with status other than void or draft"})
         }
         //Delete the sales
-        const response = await axios.delete(`${api}/${id}`, option)
+        const response = await api.delete(`${type}/${id}`)
         //Return the sales
         res.status(response.status).json({data: true})
     }
     catch (error){
         console.error(error)
         return res.status(500).json({message: `Failed deleting ${type}`, error})
+    }
+}
+
+function verifyRequest(body,type){
+    if (type === 'quotes' || type === 'orders' || type === 'delivery_orders' || type === 'invoice' || type === 'credit_notes'){
+
+    }
+    else if (type === 'payments'){
+
+    }
+    else if (type === 'refunds'){
+
+    }
+    else {
+        return null
     }
 }
 
