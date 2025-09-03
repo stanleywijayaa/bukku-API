@@ -267,9 +267,11 @@ function verifyCreateRequest(data, type){
 
     //Check for type-specific parameters
     if (["quotes", "orders", "delivery_orders", "invoice", "credit_notes"].includes(type)){
+        //Check required parameter for (quotes, orders, delivery orders, invoice, and credit notes)
         if(!data.tax_mode || !data.form_items){
             return {bool: false, status: 400, message: "Missing required parameter(s)"}
         }
+        //Validate parameters for (quotes, orders, delivery orders, invoice, and credit notes)
         else{
             if(data.shipping_info && data.shipping_info.length > 100) return {bool: false, status: 400, message: "Invalid shipping info"}
             if(data.title && data.title.length > 255) return {bool: false, status: 400, message: "Invalid title"}
@@ -278,14 +280,14 @@ function verifyCreateRequest(data, type){
         }
     }
     else if (type === 'payments'){
-        if(!data?.tax_mode || !data?.form_items){
-            return {bool: false, status: 400, message: "Missing required parameter(s)"}
-        }
+        //Check required parameter for payments
+        if(!data.amount || !data.deposit_items) return {bool: false, status: 400, message: "Missing required parameter(s)"}
+        return {bool: true}
     }
     else if (type === 'refunds'){
-        if(!data?.deposit_items){
-            return {bool: false, status: 400, message: "Missing required parameter(s)"}
-        }
+        //Check required parameter for refunds
+        if(!data?.deposit_items) return {bool: false, status: 400, message: "Missing required parameter(s)"}
+        return {bool: true}
     }
     else {
         return {bool: false, status: 404, message: "Invalid request"}
