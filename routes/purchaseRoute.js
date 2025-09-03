@@ -29,6 +29,7 @@ router.route('/goods')
     .post(billsController.createBill)
     .put(billsController.updateBill)
     .patch(billsController.updateBillStatus)
+    .delete(billsController.deleteBill)
 
 router.route('/goods/:id')
     .get(billsController.getBill)

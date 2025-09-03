@@ -245,10 +245,26 @@ const updateBillStatus = async (req, res) => {
     }
 }
 
+const deleteBill = async (req, res) => {
+    if (!req?.body?.id) return res.status(400).json({"message": "Order ID required"})
+    try {
+        await api.get(`/bills/${req.body.id}`)
+        const result = await api.delete(`/bills/${req.body.id}`)
+        res.json(result.data)
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No purchase bills matches ID ${req.body.id}` });
+        }
+        console.error("❌ Failed:", err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to delete purchase bills status" });
+    }
+}
+
 module.exports = {
     getBillList,
     getBill,
     createBill,
     updateBill,
-    updateBillStatus
+    updateBillStatus,
+    deleteBill
 }
