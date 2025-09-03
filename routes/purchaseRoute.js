@@ -26,6 +26,7 @@ router.route('/goods_received_notes/:id')
 
 router.route('/goods')
     .get(billsController.getBillList)
+    .post(billsController.createBill)
 
 router.route('/goods/:id')
     .get(billsController.getBill)

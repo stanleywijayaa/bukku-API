@@ -72,7 +72,91 @@ const getBill = async(req, res) => {
     }
 }
 
+const createBill = async(req, res) => {
+    const {
+        payment_mode,
+        contact_id,
+        contact2_id,
+        number,
+        number2,
+        date,
+        term_id,
+        due_date,
+        currency_code,
+        exchange_rate,
+        billing_party,
+        tag_ids,
+        description,
+        remarks,
+        tax_mode,
+        form_items,
+        deposit_items,
+        status,
+        files,
+        customs_form_no,
+        customs_k2_form_no,
+        incoterms,
+        myinvois_action
+    } = req.body
+
+    if (!payment_mode || !contact_id || !date || !currency_code || !exchange_rate || !tax_mode || !form_items || !status) {
+        return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const allowedMode = ["cash", "credit", "claim"]
+    const allowedTaxMode = ["inclusive", "exclusive"]
+    const allowedStatus = ["draft", "pending_approval", "ready"];
+
+    if (!allowedMode.includes(payment_mode)) {
+        return res.status(400).json({ message: `Invalid payment_mode. Allowed: ${allowedMode.join(", ")}` });
+    }
+    if (!allowedTaxMode.includes(tax_mode)) {
+        return res.status(400).json({ message: `Invalid tax_mode. Allowed: ${allowedTaxMode.join(", ")}` });
+    }
+    if (!allowedStatus.includes(status)) {
+        return res.status(400).json({ message: `Invalid status. Allowed: ${allowedStatus.join(", ")}` });
+    }
+
+    try {
+        const allowedInvois = ["NORMAL", "VALIDATE", "EXTERNAL"];
+
+        const payload = {
+            payment_mode,
+            contact_id,
+            date,
+            currency_code,
+            exchange_rate,
+            tax_mode,
+            form_items,
+            status
+        };
+        if (contact2_id) payload.contact2_id = contact2_id
+        if (number && number.length <= 50) payload.number = number;
+        if (number2 && number2.length <= 50) payload.number2 = number2;
+        if (term_id) payload.term_id = term_id;
+        if (due_date) payload.due_date = due_date;
+        if (billing_party) payload.billing_party = billing_party;
+        if (Array.isArray(tag_ids) && tag_ids.length <= 4) payload.tag_ids = tag_ids;
+        if (description && description.length <= 255) payload.description = description;
+        if (remarks) payload.remarks = remarks;
+        if (deposit_items) payload.deposit_items = deposit_items;
+        if (files) payload.files = files;
+        if (customs_form_no) payload.customs_form_no = customs_form_no
+        if (customs_k2_form_no) payload.customs_k2_form_no = customs_k2_form_no
+        if (incoterms) payload.incoterms = incoterms
+        if (myinvois_action && allowedInvois.includes(myinvois_action)) payload.myinvois_action = myinvois_action
+
+        const response = await api.post('/bills', payload)
+        res.status(201).json(response.data)
+    } catch (err) {
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to create bills" });
+    }
+}
+
+
 module.exports = {
     getBillList,
-    getBill
+    getBill,
+    createBill
 }
