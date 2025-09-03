@@ -118,8 +118,40 @@ const createPayment = async(req, res) => {
     }
 }
 
+const updatePayment = async(req, res) => {
+    if (!req?.body?.id) return res.status(400).json({ 'message': 'ID is required.'});
+    try {
+        await api.get(`/payments/${req.body.id}`);
+        const payload = {};
+
+        if (req.body.number && req.body.number.length <= 50) payload.number = req.body.number;
+        if (req.body.number2 && req.body.number2.length <= 50) payload.number2 = req.body.number2;
+        if (req.body.date) payload.date = req.body.date;
+        if (req.body.currency_code) payload.currency_code = req.body.currency_code;
+        if (typeof req.body.exchange_rate === "number") payload.exchange_rate = req.body.exchange_rate;
+        if (typeof req.body.amount === "number") payload.amount = req.body.amount;
+        if (Array.isArray(req.body.tag_ids) && req.body.tag_ids.length <= 4) payload.tag_ids = req.body.tag_ids;
+        if (req.body.description && req.body.description.length <= 255) payload.description = req.body.description;
+        if (req.body.remarks) payload.remarks = req.body.remarks;
+        if (Array.isArray(req.body.link_items)) payload.link_items = link_items
+        if (Array.isArray(req.body.deposit_items)) payload.deposit_items = deposit_items
+        if (req.body.email) payload.email = req.body.email;
+        if (Array.isArray(req.body.files)) payload.files = req.body.files;
+
+        const result = await api.put(`/payments/${req.body.id}`, payload);
+        res.json(result.data);
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No purchase payments matches ID ${req.body.id}` });
+        }
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to update payments" });
+    }
+}
+
 module.exports = {
     getPaymentList,
     getPayment,
-    createPayment
+    createPayment,
+    updatePayment
 }

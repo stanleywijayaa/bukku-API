@@ -49,7 +49,7 @@ router.route('/credit_notes/:id')
 router.route('/payments')
     .get(paymentController.getPaymentList)
     .post(paymentController.createPayment)
-    .put()
+    .put(paymentController.updatePayment)
     .patch()
     .delete()
 
