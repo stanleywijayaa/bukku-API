@@ -12,7 +12,7 @@ router.route('/orders')
     .delete(OrderController.deleteOrder)
 
 router.route('/orders/:id')
-    .get(productOrderController.getOrder)
+    .get(OrderController.getOrder)
 
 router.route('/goods_received_notes')
     .get(receivedNotesController.getReceivedList)
@@ -26,5 +26,8 @@ router.route('/goods_received_notes/:id')
 
 router.route('/goods')
     .get(billsController.getBillList)
+
+router.route('/goods/:id')
+    .get(billsController.getBill)
 
 module.exports = router;

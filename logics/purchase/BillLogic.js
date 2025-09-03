@@ -61,6 +61,18 @@ const getBillList = async(req, res) => {
     }
 }
 
+const getBill = async(req, res) => {
+    try {
+        const {id} = req.params
+        const response = await api.get(`/bills/${id}`)
+        res.json(response.data)
+    } catch (err){
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to fetch bills" });
+    }
+}
+
 module.exports = {
-    getBillList
+    getBillList,
+    getBill
 }
