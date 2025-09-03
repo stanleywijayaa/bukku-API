@@ -62,7 +62,7 @@ router.route('/refunds')
     .post(refundController.createRefund)
     .put(refundController.updateRefund)
     .patch(refundController.updateRefundStatus)
-    .delete()
+    .delete(refundController.deleteRefund)
 
 router.route('/refunds/:id')
     .get(refundController.getRefund)

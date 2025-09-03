@@ -177,10 +177,33 @@ const updateRefundStatus = async (req, res) => {
     }
 }
 
+const deleteRefund = async (req, res) => {
+    if (!req?.body?.id) return res.status(400).json({"message": "Refund ID required"})
+    try {
+        const refund = await api.get(`/refunds/${req.body.id}`)
+        const status = refund.data?.status
+        if (!['draft', 'void'].includes(status)) {
+            return res.status(400).json({
+                "message": `Bill with ID ${req.body.id} cannot be deleted because its status is '${status}'. Only 'draft' or 'void' bills can be deleted.`
+            });
+        }
+
+        const result = await api.delete(`/refunds/${req.body.id}`)
+        res.json(result.data)
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No purchase refunds matches ID ${req.body.id}` });
+        }
+        console.error("❌ Failed:", err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to delete purchase refund status" });
+    }
+}
+
 module.exports = {
     getRefundList,
     getRefund,
     createRefund,
     updateRefund,
-    updateRefundStatus
+    updateRefundStatus,
+    deleteRefund
 }
