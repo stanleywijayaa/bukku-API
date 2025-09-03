@@ -6,7 +6,7 @@ dotenv.config();
 //create
 const createMoneyIn = async(req, res) => {
     const{ 
-        contact_id, 
+        contact_id: contact_id, 
         billing_party, 
         billing_contact_person_id, 
         billing_contact_person, 
@@ -26,15 +26,25 @@ const createMoneyIn = async(req, res) => {
         status, 
         deposit_items
     } = req.body;
-    if(
-    !number || !date || !currency_code || !exchange_rate || 
-    !bank_items || !rounding_on || !status || !deposit_items
-    ){
+    if(!number || !date || !currency_code || !exchange_rate || !bank_items || !rounding_on || !status || !deposit_items){
         return res.status(400).json({message: 'please fill in the required data'});
     }
+
+    const allowedTaxMode = ["inclusive", "exclusive"]
+    const allowedStatus = ["draft", "pending_approval", "ready", "void"];
+
+    if (!allowedTaxMode.includes(tax_mode)) {
+        return res.status(400).json({ message: `Invalid tax_mode. Allowed: ${allowedTaxMode.join(", ")}` });
+    }
+
+    if (!allowedStatus.includes(status)) {
+        return res.status(400).json({ message: `Invalid status. Allowed: ${allowedStatus.join(", ")}` });
+    }
+
     if(number.length > 50){
         return res.status(400),json({message: 'number should not exceed 50 characters'});
     }
+
     const payload = {
         number,
         date,
@@ -57,7 +67,18 @@ const createMoneyIn = async(req, res) => {
     if(tag_ids && tag_ids.length <= 4)payload.tag_ids = tag_ids;
     if(files)payload.files = files;
 
-
+    try {
+        const response = await axios.post(api, payload, {
+            headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.BUKKU_ACCESS_TOKEN}`,
+          }
+        })
+        res.json(response.data);
+    } catch (err) {
+        console.error(err)
+        res.status(500).json({message: 'error creating money in entry'})
+    }
 } 
 
 //get all list (but can search based on parameters)
