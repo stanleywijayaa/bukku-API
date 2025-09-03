@@ -54,6 +54,6 @@ router.route('/payments')
     .delete()
 
 router.route('/payments/:id')
-    .get()
+    .get(paymentController.getPayment)
 
 module.exports = router;
