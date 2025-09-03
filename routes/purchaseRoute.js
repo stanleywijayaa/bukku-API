@@ -27,14 +27,14 @@ router.route('/goods_received_notes')
 router.route('/goods_received_notes/:id')
     .get(receivedNotesController.getReceived)
 
-router.route('/goods')
+router.route('/bills')
     .get(billsController.getBillList)
     .post(billsController.createBill)
     .put(billsController.updateBill)
     .patch(billsController.updateBillStatus)
     .delete(billsController.deleteBill)
 
-router.route('/goods/:id')
+router.route('/bills/:id')
     .get(billsController.getBill)
 
 router.route('/credit_notes')

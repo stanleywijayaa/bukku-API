@@ -40,7 +40,7 @@ const getBillList = async(req, res) => {
         if (sort_by && allowedSortBy.includes(sort_by)) params.sort_by = sort_by;
         if (sort_dir && allowedSortDir.includes(sort_dir)) params.sort_dir = sort_dir;
 
-        const billInfo = await api.get('bills', { params });
+        const billInfo = await api.get('/bills', { params });
         res.json(billInfo.data);
 
     } catch (err){
