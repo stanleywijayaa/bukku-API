@@ -4,6 +4,7 @@ const OrderController = require('../logics/purchase/orderLogic');
 const receivedNotesController = require('../logics/purchase/receivedLogic')
 const billsController = require('../logics/purchase/billLogic')
 const creditController = require('../logics/purchase/creditLogic')
+const paymentController = require('../logics/purchase/paymentLogic')
 
 router.route('/orders')
     .get(OrderController.getOrderList)
@@ -44,4 +45,15 @@ router.route('/credit_notes')
 
 router.route('/credit_notes/:id')
     .get(creditController.getCredit)
+
+router.route('/payments')
+    .get(paymentController.getPaymentList)
+    .post()
+    .put()
+    .patch()
+    .delete()
+
+router.route('/payments/:id')
+    .get()
+
 module.exports = router;

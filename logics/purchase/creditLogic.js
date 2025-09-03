@@ -37,8 +37,8 @@ const getCreditList = async (req, res) => {
         if (sort_by && allowedSortBy.includes(sort_by)) params.sort_by = sort_by;
         if (sort_dir && allowedSortDir.includes(sort_dir)) params.sort_dir = sort_dir;
 
-        const orderInfo = await api.get('/credit_notes', { params });
-        res.json(orderInfo.data);
+        const creditInfo = await api.get('/credit_notes', { params });
+        res.json(creditInfo.data);
     } catch (err) {
         console.error('❌ Failed:', err.response?.data || err.message || err);
         res.status(500).json({ error: "Failed to fetch credit" });
