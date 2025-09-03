@@ -142,9 +142,56 @@ const createReceived = async(req, res) => {
     }
 }
 
+const updateReceived = async(req, res) => {
+    if (!req?.body?.id) return res.status(400).json({ 'message': 'ID is required.'});
+    try {
+        await api.get(`/goods_received_notes/${req.body.id}`);
+
+        const allowedTaxMode = ["inclusive", "exclusive"];
+        const payload = {};
+
+        if (req.body.number && req.body.number.length <= 50) payload.number = req.body.number;
+        if (req.body.number2 && req.body.number2.length <= 50) payload.number2 = req.body.number2;
+        if (req.body.date) payload.date = req.body.date;
+        if (req.body.currency_code) payload.currency_code = req.body.currency_code;
+        if (typeof req.body.exchange_rate === "number") payload.exchange_rate = req.body.exchange_rate;
+        if (req.body.billing_party) payload.billing_party = req.body.billing_party;
+        if (typeof req.body.show_shipping === "boolean") payload.show_shipping = req.body.show_shipping;
+        if (req.body.shipping_party) payload.shipping_party = req.body.shipping_party;
+        if (req.body.shipping_info && req.body.shipping_info.length <= 100) payload.shipping_info = req.body.shipping_info;
+        if (Array.isArray(req.body.tag_ids) && req.body.tag_ids.length <= 4) payload.tag_ids = req.body.tag_ids;
+        if (req.body.title && req.body.title.length <= 255) payload.title = req.body.title;
+        if (req.body.description && req.body.description.length <= 255) payload.description = req.body.description;
+        if (req.body.remarks) payload.remarks = req.body.remarks;
+
+        if (req.body.tax_mode) {
+            if (!allowedTaxMode.includes(req.body.tax_mode)) {
+                return res.status(400).json({ message: "Invalid tax_mode value" });
+            }
+            payload.tax_mode = req.body.tax_mode;
+        }
+
+        if (Array.isArray(req.body.form_items) && req.body.form_items.length > 0) {
+            payload.form_items = req.body.form_items;
+        }
+
+        if (req.body.email) payload.email = req.body.email;
+        if (Array.isArray(req.body.files)) payload.files = req.body.files;
+
+        const result = await api.put(`/goods_received_notes/${req.body.id}`, payload);
+        res.json(result.data);
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No purchase received_notes matches ID ${req.body.id}` });
+        }
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to update received_notes" });
+    }
+}
 
 module.exports = {
     getReceivedList,
     getReceived,
-    createReceived
+    createReceived,
+    updateReceived
 }
