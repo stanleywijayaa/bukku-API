@@ -44,9 +44,8 @@ const readFileLists = async (req, res) => {
       page: page ? parseInt(page, 10) : 1,
       page_size: PAGE_SIZE,
     };
-    
+
     if (search) params.search = search;
-    
     if (type && allowedTypes.includes(type)) params.type = type;
   try {
     // Call Bukku API
