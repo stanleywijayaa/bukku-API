@@ -156,3 +156,9 @@ const getMoneyIn = async(req, res) => {
 //update status (patch)
 
 //delete
+
+module.exports = {
+    createMoneyIn,
+    getMoneyInList,
+    getMoneyIn
+}
