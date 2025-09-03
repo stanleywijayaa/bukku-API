@@ -48,7 +48,7 @@ router.route('/credit_notes/:id')
 
 router.route('/payments')
     .get(paymentController.getPaymentList)
-    .post()
+    .post(paymentController.createPayment)
     .put()
     .patch()
     .delete()
