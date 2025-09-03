@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 //const quotation = require('../../logics/sales/quotationLogic');
-const sales = require('../../logics/sales/salesLogic')
+const sales = require('../logics/sales/salesLogic')
 
 //Sales route
 router.route('/:type')
