@@ -50,7 +50,7 @@ router.route('/payments')
     .get(paymentController.getPaymentList)
     .post(paymentController.createPayment)
     .put(paymentController.updatePayment)
-    .patch()
+    .patch(paymentController.updatePaymentStatus)
     .delete()
 
 router.route('/payments/:id')
