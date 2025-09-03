@@ -223,7 +223,13 @@ const updateReceivedStatus = async (req, res) => {
 const deleteReceived = async (req, res) => {
     if (!req?.body?.id) return res.status(400).json({"message": "Received ID required"})
     try {
-        await api.get(`/goods_received_notes/${req.body.id}`)
+        const received = await api.get(`/goods_received_notes/${req.body.id}`)
+        const status = received.data?.status
+        if (!['draft', 'void'].includes(status)) {
+            return res.status(400).json({
+                "message": `Bill with ID ${req.body.id} cannot be deleted because its status is '${status}'. Only 'draft' or 'void' bills can be deleted.`
+            });
+        }
         const result = await api.delete(`/goods_received_notes/${req.body.id}`)
         res.json(result.data)
     } catch (err) {

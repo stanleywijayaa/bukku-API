@@ -248,7 +248,13 @@ const updateBillStatus = async (req, res) => {
 const deleteBill = async (req, res) => {
     if (!req?.body?.id) return res.status(400).json({"message": "Order ID required"})
     try {
-        await api.get(`/bills/${req.body.id}`)
+        const bill = await api.get(`/bills/${req.body.id}`)
+        const status = bill.data?.status
+        if (!['draft', 'void'].includes(status)) {
+            return res.status(400).json({
+                "message": `Bill with ID ${req.body.id} cannot be deleted because its status is '${status}'. Only 'draft' or 'void' bills can be deleted.`
+            });
+        }
         const result = await api.delete(`/bills/${req.body.id}`)
         res.json(result.data)
     } catch (err) {
