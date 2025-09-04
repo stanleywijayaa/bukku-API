@@ -16,6 +16,9 @@ app.use('/purchases', require('./routes/purchaseRoute'))
 app.use('/journal_entries', require('./routes/accounting/journalRoute'))
 app.use('/accounts', require('./routes/accounting/accountRoute'))
 
+//ControlPanel route
+app.use('/locations', require('./routes/controlPanel/locationRoute'))
+
 //Sales route
 app.use('/sales', require('./routes/salesRoute'))
 
