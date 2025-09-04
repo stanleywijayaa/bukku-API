@@ -35,7 +35,45 @@ const getLocation = async(req, res) => {
     }
 }
 
+const createLocation = async(req, res) => {
+    const {
+        code,
+        name,
+        street,
+        city,
+        state,
+        postcode,
+        country_code,
+        remarks
+    } = req.body
+
+    if ( !name || !code ) {
+        return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    try {
+        const payload = {
+            name,
+            code
+        };
+
+        if (street) payload.street = street;
+        if (city) payload.city = city;
+        if (state) payload.state = state;
+        if (postcode) payload.postcode = postcode;
+        if (country_code) payload.country_code = country_code;
+        if (remarks) payload.remarks = remarks;
+    
+        const response = await api.post('/location', payload)
+        res.status(201).json(response.data)
+    } catch (err) {
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to create location" });
+    }
+}
+
 module.exports = {
     getLocationList,
-    getLocation
+    getLocation,
+    createLocation
 }

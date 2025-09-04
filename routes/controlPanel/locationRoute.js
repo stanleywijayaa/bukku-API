@@ -4,7 +4,7 @@ const locationController = require('../../logics/controlPanel/locationLogic');
 
 router.route('/')
     .get(locationController.getLocationList)
-    .post()
+    .post(locationController.createLocation)
     .put()
     .patch()
     .delete()
