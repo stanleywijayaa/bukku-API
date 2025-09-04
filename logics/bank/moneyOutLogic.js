@@ -286,7 +286,7 @@ const deleteMoneyOut = async(req, res) => {
   }catch(err){
     console.error("Failed", err.response?.data || err.message || err);
     res.status(500).json({
-      message: "Failed to delete money-in transaction",
+      message: "Failed to delete money out transaction",
       error: err.response?.data || err.message,
     });
   }
