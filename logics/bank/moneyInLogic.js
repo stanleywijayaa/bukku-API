@@ -19,6 +19,12 @@ const allowedStatus = ["draft", "pending_approval", "ready", "void"];
 const allowedEmailStatus = ["UNSENT", "PENDING", "SENT", "BOUNCED", "OPENED", "VIEWED"];
 const allowedSortBy = ["number", "number2", "date", "contact_name", "amount", "description", "created_at"];
 const allowedSortDir = ["asc", "desc"];
+const allowedTransitions = {
+        draft: ['pending_approval', 'ready'],
+        pending_approval: ['ready'],
+        ready: ['void'],
+        void: ['ready']
+    }
 
 //create
 const createMoneyIn = async(req, res) => {
@@ -241,8 +247,13 @@ const updateMoneyIn = async (req, res) => {
     });
   }
 };
-//update status (patch)
 
+//update status (patch)
+const updateMoneyInStatus = async(req, res) => {
+  const { transactionId, status, void_reason} = req.body;
+  if(!transactionId)return res.status(400).json({message: 'transaction id is required'})
+
+}
 //delete
 
 module.exports = {
