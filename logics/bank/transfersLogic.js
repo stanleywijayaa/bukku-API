@@ -119,3 +119,79 @@ const getTransfer = async(req, res) => {
         res.status(500).json({ error: "Failed to fetch transfer record" });
     }
 }
+
+const updateTransfer = async(req, res) => {
+    const { transactionId } = req.params;
+    if (!transactionId || isNaN(transactionId)) {
+      return res.status(400).json({ message: "transactionId is required and must be a number" });
+    }
+    const{ 
+        number, 
+        number2, 
+        date, 
+        currency_code, 
+        exchange_rate,
+        account_id,
+        account_id2,
+        amount,
+        description,
+        internal_note,
+        remarks,
+        tag_ids, 
+        files, 
+        status, 
+    } = req.body;
+
+    if (!number || number.length > 50) {
+      return res.status(400).json({ message: "Transaction number is required and must be <= 50 characters" });
+    }
+    if (!date) {
+      return res.status(400).json({ message: "Transaction date is required" });
+    }
+    if (!currency_code) {
+      return res.status(400).json({ message: "Currency code is required" });
+    }
+    if (!exchange_rate) {
+      return res.status(400).json({ message: "Exchange rate is required" });
+    }
+    if(!account_id) {
+        return res.status(400).json({ message: "Source's account id is required"})
+    }
+    if(!account_id2) {
+        return res.status(400).json({ message: "Destination's account id is required"})
+    }
+    if(!amount) {
+        return res.status(400).json({ message: "Transfer amount is required"})
+    }
+    if (!status) {
+      return res.status(400).json({ message: "Status is required" });
+    }
+
+    const payload = {
+        number, 
+        number2, 
+        date, 
+        currency_code, 
+        exchange_rate,
+        account_id,
+        account_id2,
+        amount,
+        description,
+        internal_note,
+        remarks,
+        tag_ids, 
+        files, 
+        status, 
+    };
+
+    try{
+        const response = await api.put(`/transfers/${transactionId}`, payload);
+        res.json(response.data);
+    }catch(err){
+        console.error("Failed", err.response?.data || err.message || err);
+        res.status(500).json({
+        message: "Failed to update Transfer",
+        error: err.response?.data || err.message,
+        });
+    }
+}

@@ -232,7 +232,6 @@ const updateMoneyOut = async (req, res) => {
 
     try {
     const response = await api.put(`/expenses/${transactionId}`, payload);
-
     res.json(response.data);
   } catch (err) {
     console.error("Failed", err.response?.data || err.message || err);
