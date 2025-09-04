@@ -192,10 +192,32 @@ const updateJournalStatus = async (req, res) => {
     }
 }
 
+const deleteJournal = async (req, res) => {
+    if (!req?.body?.id) return res.status(400).json({"message": "Delete ID required"})
+    try {
+        const journal = await api.get(`/journal_entries/${req.body.id}`)
+        const status = journal.data?.status
+        if (!['draft', 'void'].includes(status)) {
+            return res.status(400).json({
+                "message": `Journal with ID ${req.body.id} cannot be deleted because its status is '${status}'. Only 'draft' or 'void' bills can be deleted.`
+            });
+        }
+        const result = await api.delete(`/journal_entries/${req.body.id}`)
+        res.json(result.data)
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No journal entries matches ID ${req.body.id}` });
+        }
+        console.error("❌ Failed:", err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to delete journal status" });
+    }
+}
+
 module.exports = {
     getJournalList,
     getJournal,
     createJournal,
     updateJournal,
-    updateJournalStatus
+    updateJournalStatus,
+    deleteJournal
 }

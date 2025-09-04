@@ -7,7 +7,7 @@ router.route('/')
     .post(journalController.createJournal)
     .put(journalController.updateJournal)
     .patch(journalController.updateJournalStatus)
-    .delete()
+    .delete(journalController.deleteJournal)
 
 router.route('/:id')
     .get(journalController.getJournal)
