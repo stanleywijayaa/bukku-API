@@ -10,4 +10,4 @@ router.route('/')
     .delete()
 
 router.route('/:id')
-    .get()
+    .get(locationController.getLocation)

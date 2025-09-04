@@ -15,7 +15,7 @@ const api = axios.create({
 const getLocationList = async(req, res) => {
     try {
         const {include_archived} = req.query;
-        const locationInfo = await api.get('/locations', { include_archived });
+        const locationInfo = await api.get('/location', { include_archived });
         res.json(locationInfo.data);
 
     } catch (err){
@@ -24,6 +24,18 @@ const getLocationList = async(req, res) => {
     }
 }
 
+const getLocation = async(req, res) => {
+    try {
+        const {id} = req.params
+        const response = await api.get(`/location/${id}`)
+        res.json(response.data)
+    } catch (err){
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to fetch location" });
+    }
+}
+
 module.exports = {
-    getLocationList
+    getLocationList,
+    getLocation
 }
