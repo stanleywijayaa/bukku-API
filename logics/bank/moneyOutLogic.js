@@ -111,7 +111,6 @@ const getMoneyOutList = async (req, res) => {
       sort_dir,
     } = req.query;
 
-    // ✅ Build query params safely
     const params = {
       page: Number(page) >= 1 ? Number(page) : 1,
       page_size: Number(page_size) > 0 ? Number(page_size) : 30,
@@ -140,7 +139,7 @@ const getMoneyOutList = async (req, res) => {
   }
 };
 
-const getMoneyout = async(req, res) => {
+const getMoneyOut = async(req, res) => {
     const { transactionId } = req.params;
     if (!transactionId || isNaN(transactionId)) {
       return res.status(400).json({ message: "transactionId is required and must be a number" });
@@ -150,6 +149,121 @@ const getMoneyout = async(req, res) => {
         res.json(response.data);
     }catch(err){
         console.error('Failed:', err.response?.data || err.message || err);
-        res.status(500).json({ error: "Failed to fetch money in record" });
+        res.status(500).json({ error: "Failed to fetch money out record" });
     }
+}
+
+const updateMoneyOut = async (req, res) => {
+  const { transactionId } = req.params;
+    if (!transactionId || isNaN(transactionId)) {
+      return res.status(400).json({ message: "transactionId is required and must be a number" });
+    }
+
+    const {
+      contact_id,
+      billing_party,
+      billing_contact_person_id,
+      billing_contact_person,
+      number,
+      number2,
+      date,
+      currency_code,
+      exchange_rate,
+      tax_mode,
+      bank_items,
+      rounding_on,
+      description,
+      internal_note,
+      remarks,
+      tag_ids,
+      files,
+      status,
+      deposit_items,
+    } = req.body;
+
+    // Minimal validation before sending to Bukku
+    if (!number || number.length > 50) {
+      return res.status(400).json({ message: "Transaction number is required and must be <= 50 characters" });
+    }
+    if (!date) {
+      return res.status(400).json({ message: "Transaction date is required" });
+    }
+    if (!currency_code) {
+      return res.status(400).json({ message: "Currency code is required" });
+    }
+    if (!exchange_rate) {
+      return res.status(400).json({ message: "Exchange rate is required" });
+    }
+    if (!bank_items || !Array.isArray(bank_items) || bank_items.length === 0) {
+      return res.status(400).json({ message: "At least one bank item is required" });
+    }
+    if (typeof rounding_on !== "boolean") {
+      return res.status(400).json({ message: "rounding_on must be true or false" });
+    }
+    if (!status) {
+      return res.status(400).json({ message: "Status is required" });
+    }
+    if (!deposit_items || !Array.isArray(deposit_items) || deposit_items.length === 0) {
+      return res.status(400).json({ message: "At least one deposit item is required" });
+    }
+
+    // ✅ Construct payload
+    const payload = {
+      contact_id,
+      billing_party,
+      billing_contact_person_id,
+      billing_contact_person,
+      number,
+      number2,
+      date,
+      currency_code,
+      exchange_rate,
+      tax_mode,
+      bank_items,
+      rounding_on,
+      description,
+      internal_note,
+      remarks,
+      tag_ids,
+      files,
+      status,
+      deposit_items,
+    };
+
+    try {
+    const response = await api.put(`/expenses/${transactionId}`, payload);
+
+    res.json(response.data);
+  } catch (err) {
+    console.error("Failed", err.response?.data || err.message || err);
+    res.status(500).json({
+      message: "Failed to update money-out transaction",
+      error: err.response?.data || err.message,
+    });
+  }
+};
+
+const updateMoneyOutStatus = async(req, res) => {
+  const { transactionId, status, void_reason} = req.body;
+  if(!transactionId)return res.status(400).json({message: 'transaction id is required'});
+  try{
+    const record = await api.get(`/incomes/${transactionId}`);
+    const curStatus = record.data.status;
+    if (!allowedTransitions[curStatus]?.includes(status)) {
+            return res.status(400).json({ "message": `Invalid status transition from ${curStatus} → ${status}`})
+        }
+        const payload = {status}
+        if (status === 'void'){
+            if(!void_reason) return res.status(400).json({ "message": "void_reason is required when voiding a transaction." });
+            payload.void_reason = void_reason
+        }
+        const result = await api.patch(`/expenses/${transactionId}`, payload)
+        res.json(result.data)
+  }catch(err){
+    console.error("Failed", err.response?.data || err.message || err)
+    res.status(500).json({
+      message: "Failed to update money-out status",
+      error: err.response?.data || err.message,
+    });
+  }
 }

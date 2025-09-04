@@ -112,7 +112,6 @@ const getMoneyInList = async (req, res) => {
       sort_dir,
     } = req.query;
 
-    // ✅ Build query params safely
     const params = {
       page: Number(page) >= 1 ? Number(page) : 1,
       page_size: Number(page_size) > 0 ? Number(page_size) : 30,
