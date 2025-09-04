@@ -76,3 +76,32 @@ const createTransaction = async(req, res) => {
         res.status(500).json({message: 'error creating transfer record'})
     }
 } 
+
+const getTransferList = async (req, res) => {
+  const {
+      date_from,
+      date_to,
+      search,
+      account_id,
+      status,
+    } = req.query;
+
+    const params = {};
+
+    if (date_from) params.date_from = date_from;
+    if (date_to) params.date_to = date_to;
+    if (search && search.length <= 100) params.search = search;
+    if (account_id && !isNaN(account_id)) params.account_id = Number(account_id);
+    if (status && allowedStatus.includes(status)) params.status = status;
+
+    try {
+    const response = await api.get("/transfers", {params});
+    res.json(response.data);
+  } catch (err) {
+    console.error("Failed", err.response?.data || err.message || err);
+    res.status(500).json({
+      message: "Failed to fetch transfer list",
+      error: err.response?.data || err.message,
+    });
+  }
+};
