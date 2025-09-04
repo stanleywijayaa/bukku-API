@@ -83,6 +83,12 @@ const createCredit = async(req, res) => {
         return res.status(400).json({ message: "Missing required fields" });
     }
 
+    if (isNaN(Number(contact_id))) return res.status(400).json({ message: `contact_id must be number.`})
+    if (isNaN(Number(exchange_rate))) return res.status(400).json({ message: `exchange_rate must be number`})
+    if (!(Array.isArray(form_items) && req.body.form_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f)))) {
+        return res.status(400).json({ message: `form_items must be array`})
+    }
+
     const allowedTaxMode = ["inclusive", "exclusive"]
     const allowedStatus = ["draft", "pending_approval", "ready"];
     const allowedInvois = ["NORMAL", "VALIDATE", "EXTERNAL"]
@@ -112,11 +118,11 @@ const createCredit = async(req, res) => {
         if (number && number.length <= 50) payload.number = number;
         if (number2 && number2.length <= 50) payload.number2 = number2;
         if (billing_party) payload.billing_party = billing_party;
-        if (tag_ids && tag_ids.length <= 4) payload.tag_ids = tag_ids;
+        if (Array.isArray(tag_ids) && tag_ids.length <= 4) payload.tag_ids = tag_ids;
         if (description && description.length <= 255) payload.description = description;
         if (remarks) payload.remarks = remarks;
-        if (link_items) payload.link_items = link_items
-        if (files) payload.files = files;
+        if (Array.isArray(link_items) && link_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) payload.link_items = link_items
+        if (Array.isArray(files) && files.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) payload.files = files;
         if (customs_form_no) payload.customs_form_no = customs_form_no
         if (customs_k2_form_no) payload.customs_k2_form_no = customs_k2_form_no
         if (incoterms) payload.incoterms = incoterms
@@ -154,12 +160,18 @@ const updateCredit = async(req, res) => {
             }
             payload.tax_mode = req.body.tax_mode;
         }
-
-        if (Array.isArray(req.body.form_items) && req.body.form_items.length > 0) {
+        if (Array.isArray(req.body.form_items) && req.body.form_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) {
             payload.form_items = req.body.form_items;
         }
-        if (req.body.link_items) payload.link_items = req.body.link_items
-        if (Array.isArray(req.body.files)) payload.files = req.body.files;
+        if (Array.isArray(req.body.link_items) && req.body.link_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) {
+            payload.link_items = req.body.link_items
+        }
+        if (Array.isArray(req.body.files) && req.body.files.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) {
+            payload.files = req.body.files;
+        }
+        if (req.body.customs_form_no) payload.customs_form_no = req.body.customs_form_no
+        if (req.body.customs_k2_form_no) payload.customs_k2_form_no = req.body.customs_k2_form_no
+        if (req.body.incoterms) payload.incoterms = req.body.incoterms
         if (req.body.myinvois_action) {
             if (!allowedInvois.includes(req.body.myinvois_action)){
                 return res.status(400).json({message: "Invalid invois"})

@@ -85,6 +85,13 @@ const createPayment = async(req, res) => {
         return res.status(400).json({ message: "Missing required fields" });
     }
 
+    if (isNaN(Number(contact_id))) return res.status(400).json({ message: `contact_id must be number.`})
+    if (isNaN(Number(exchange_rate))) return res.status(400).json({ message: `exchange_rate must be number`})
+    if (isNaN(Number(amount))) return res.status(400).json({ message: `amount must be number`})
+    if (!(Array.isArray(deposit_items) && deposit_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f)))) {
+        return res.status(400).json({ message: `deposit_items must be array of objects`})
+    }
+
     const allowedStatus = ["draft", "pending_approval", "ready"];
 
     if (!allowedStatus.includes(status)) {
@@ -103,12 +110,12 @@ const createPayment = async(req, res) => {
         };
         if (number && number.length <= 50) payload.number = number;
         if (number2 && number2.length <= 50) payload.number2 = number2;
-        if (tag_ids && tag_ids.length <= 4) payload.tag_ids = tag_ids;
+        if (Array.isArray(tag_ids) && tag_ids.length <= 4) payload.tag_ids = tag_ids;
         if (description && description.length <= 255) payload.description = description;
         if (remarks) payload.remarks = remarks;
-        if (link_items) payload.link_items = link_items
-        if (email) payload.email = email;
-        if (files) payload.files = files;
+        if (Array.isArray(link_items) && link_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) payload.link_items = link_items
+        if (email && typeof email === "object" && !Array.isArray(email)) payload.email = email;
+        if (Array.isArray(files) && files.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) payload.files = files;
 
         const response = await api.post('/payments', payload)
         res.status(201).json(response.data)
@@ -133,10 +140,16 @@ const updatePayment = async(req, res) => {
         if (Array.isArray(req.body.tag_ids) && req.body.tag_ids.length <= 4) payload.tag_ids = req.body.tag_ids;
         if (req.body.description && req.body.description.length <= 255) payload.description = req.body.description;
         if (req.body.remarks) payload.remarks = req.body.remarks;
-        if (Array.isArray(req.body.link_items)) payload.link_items = link_items
-        if (Array.isArray(req.body.deposit_items)) payload.deposit_items = deposit_items
-        if (req.body.email) payload.email = req.body.email;
-        if (Array.isArray(req.body.files)) payload.files = req.body.files;
+        if (Array.isArray(req.body.link_items) && req.body.link_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) {
+            payload.link_items = link_items
+        }
+        if (Array.isArray(req.body.deposit_items) && req.body.deposit_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) {
+            payload.deposit_items = deposit_items
+        }
+        if (req.body.email && typeof req.body.email === "object" && !Array.isArray(req.body.email)) payload.email = req.body.email;
+        if (Array.isArray(req.body.files) && req.body.files.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) {
+            payload.files = req.body.files;
+        }
 
         const result = await api.put(`/payments/${req.body.id}`, payload);
         res.json(result.data);

@@ -91,6 +91,12 @@ const createBill = async(req, res) => {
         return res.status(400).json({ message: "Missing required fields" });
     }
 
+    if (isNaN(Number(contact_id))) return res.status(400).json({ message: `contact_id must be number.`})
+    if (isNaN(Number(exchange_rate))) return res.status(400).json({ message: `exchange_rate must be number`})
+    if (!(Array.isArray(form_items) && req.body.form_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f)))) {
+        return res.status(400).json({ message: `form_items must be array`})
+    }
+
     const allowedMode = ["cash", "credit", "claim"]
     const allowedTaxMode = ["inclusive", "exclusive"]
     const allowedStatus = ["draft", "pending_approval", "ready"];
@@ -118,17 +124,17 @@ const createBill = async(req, res) => {
             form_items,
             status
         };
-        if (contact2_id) payload.contact2_id = contact2_id
+        if (typeof contact2_id === "number") payload.contact2_id = contact2_id
         if (number && number.length <= 50) payload.number = number;
         if (number2 && number2.length <= 50) payload.number2 = number2;
-        if (term_id) payload.term_id = term_id;
+        if (typeof term_id === "number") payload.term_id = term_id;
         if (due_date) payload.due_date = due_date;
         if (billing_party) payload.billing_party = billing_party;
         if (Array.isArray(tag_ids) && tag_ids.length <= 4) payload.tag_ids = tag_ids;
         if (description && description.length <= 255) payload.description = description;
         if (remarks) payload.remarks = remarks;
-        if (deposit_items) payload.deposit_items = deposit_items;
-        if (files) payload.files = files;
+        if (Array.isArray(deposit_items) && deposit_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) payload.deposit_items = deposit_items;
+        if (Array.isArray(files) && files.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) payload.files = files;
         if (customs_form_no) payload.customs_form_no = customs_form_no
         if (customs_k2_form_no) payload.customs_k2_form_no = customs_k2_form_no
         if (incoterms) payload.incoterms = incoterms
@@ -158,11 +164,11 @@ const updateBill = async(req, res) => {
             }
             payload.payment_mode = req.body.payment_mode
         }
-        if (req.body.contact2_id) payload.contact2_id = req.body.contact2_id
+        if (typeof req.body.contact2_id === "number") payload.contact2_id = req.body.contact2_id
         if (req.body.number && req.body.number.length <= 50) payload.number = req.body.number;
         if (req.body.number2 && req.body.number2.length <= 50) payload.number2 = req.body.number2;
         if (req.body.date) payload.date = req.body.date;
-        if (req.body.term_id) payload.term_id = req.body.term_id;
+        if (typeof req.body.term_id === "number") payload.term_id = req.body.term_id;
         if (req.body.due_date) payload.due_date = req.body.due_date
         if (req.body.currency_code) payload.currency_code = req.body.currency_code;
         if (typeof req.body.exchange_rate === "number") payload.exchange_rate = req.body.exchange_rate;
@@ -176,11 +182,15 @@ const updateBill = async(req, res) => {
             }
             payload.tax_mode = req.body.tax_mode;
         }
-        if (Array.isArray(req.body.form_items) && req.body.form_items.length > 0) {
+        if (Array.isArray(req.body.form_items) && req.body.form_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) {
             payload.form_items = req.body.form_items;
         }
-        if (req.body.deposit_items) payload.deposit_items = req.body.deposit_items
-        if (Array.isArray(req.body.files)) payload.files = req.body.files;
+        if (Array.isArray(req.body.deposit_items) && req.body.deposit_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) {
+            payload.deposit_items = req.body.deposit_items
+        }
+        if (Array.isArray(req.body.files) && req.body.files.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) {
+            payload.files = req.body.files;
+        }
         if (req.body.customs_form_no) payload.customs_form_no = req.body.customs_form_no
         if (req.body.customs_k2_form_no) payload.customs_k2_form_no = req.body.customs_k2_form_no
         if (req.body.incoterms) payload.incoterms = req.body.incoterms

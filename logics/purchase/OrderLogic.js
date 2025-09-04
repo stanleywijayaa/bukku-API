@@ -88,6 +88,12 @@ const createOrder = async(req, res) => {
         return res.status(400).json({ message: "Missing required fields" });
     }
 
+    if (isNaN(Number(contact_id))) return res.status(400).json({ message: `contact_id must be number.`})
+    if (isNaN(Number(exchange_rate))) return res.status(400).json({ message: `exchange_rate must be number`})
+    if (!(Array.isArray(form_items) && req.body.form_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f)))) {
+        return res.status(400).json({ message: `form_items must be array`})
+    }
+
     const allowedTaxMode = ["inclusive", "exclusive"]
     const allowedStatus = ["draft", "pending_approval", "ready"];
 
@@ -112,17 +118,16 @@ const createOrder = async(req, res) => {
         if (number && number.length <= 50) payload.number = number;
         if (number2 && number2.length <= 50) payload.number2 = number2;
         if (billing_party) payload.billing_party = billing_party;
-        if (show_shipping) payload.show_shipping = show_shipping;
+        if (typeof show_shipping === "boolean") payload.show_shipping = show_shipping;
         if (shipping_party) payload.shipping_party = shipping_party;
         if (shipping_info && shipping_info.length <= 100) payload.shipping_info = shipping_info;
-        if (tag_ids && tag_ids.length <= 4) payload.tag_ids = tag_ids;
-        if (term_id) payload.term_id = term_id;
+        if (Array.isArray(tag_ids) && tag_ids.length <= 4) payload.tag_ids = tag_ids;
+        if (Array.isArray(term_id)) payload.term_id = term_id;
         if (title && title.length <= 255) payload.title = title;
         if (description && description.length <= 255) payload.description = description;
         if (remarks) payload.remarks = remarks;
-        if (email) payload.email = email;
-        if (files) payload.files = files;
-        if (reference_no) payload.reference_no = reference_no;
+        if (email && typeof email === "object" && !Array.isArray(email)) payload.email = email;
+        if (Array.isArray(files) && files.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) payload.files = files;
 
         const response = await api.post('/orders', payload)
         res.status(201).json(response.data)
@@ -150,7 +155,7 @@ const updateOrder = async(req, res) => {
         if (req.body.shipping_party) payload.shipping_party = req.body.shipping_party;
         if (req.body.shipping_info && req.body.shipping_info.length <= 100) payload.shipping_info = req.body.shipping_info;
         if (Array.isArray(req.body.tag_ids) && req.body.tag_ids.length <= 4) payload.tag_ids = req.body.tag_ids;
-        if (req.body.term_id) payload.term_id = req.body.term_id;
+        if (typeof req.body.term_id === "number" && Number.isInteger(req.body.term_id)) payload.term_id = req.body.term_id;
         if (req.body.title && req.body.title.length <= 255) payload.title = req.body.title;
         if (req.body.description && req.body.description.length <= 255) payload.description = req.body.description;
         if (req.body.remarks) payload.remarks = req.body.remarks;
@@ -161,13 +166,13 @@ const updateOrder = async(req, res) => {
             }
             payload.tax_mode = req.body.tax_mode;
         }
-
-        if (Array.isArray(req.body.form_items) && req.body.form_items.length > 0) {
+        if (Array.isArray(req.body.form_items) && req.body.form_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) {
             payload.form_items = req.body.form_items;
         }
-
-        if (req.body.email) payload.email = req.body.email;
-        if (Array.isArray(req.body.files)) payload.files = req.body.files;
+        if (req.body.email && typeof req.body.email === "object" && !Array.isArray(req.body.email)) payload.email = req.body.email;
+        if (Array.isArray(req.body.files) && req.body.files.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) {
+            payload.files = req.body.files;
+        }
 
         const result = await api.put(`/orders/${req.body.id}`, payload);
         res.json(result.data);
