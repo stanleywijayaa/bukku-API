@@ -91,19 +91,19 @@ const getSalesList = async (req,res) => {
 //Get a specific sales
 const getSales = async (req,res) => {
     //Determine the sales type
-    const { type } = req.params
+    const type = req.params.type
     //Validate route
     if(!["quotes", "orders", "delivery_orders", "invoices", "credit_notes", "payments", "refunds"].includes(type)){
         return res.status(404).json({message: 'Invalid request'})
     }
     //Get the transaction id
-    const id = req.query?.id
+    const transactionId = req.params.transactionId
     //Check if the id exists
-    if (!id) return res.status(400).json({message: 'ID is required'})
+    if (!transactionId) return res.status(400).json({message: 'ID is required'})
     
     try{
         //Get the sales
-        const response = await api.get(`${type}/${id}`)
+        const response = await api.get(`${type}/${transactionId}`)
         const data = response.data
         //Return the sales
         res.status(response.status).json({data})
@@ -116,12 +116,14 @@ const getSales = async (req,res) => {
 
 //Replace the sales entry
 const updateSales = async (req,res) => {
-    //Determine the sales type
-    const { type } = req.params
+    //Determine the sales type and id
+    const type = req.params.type
     //Check if type exists
     if (!type) return res.status(400).json({message: 'Invalid route'})
     //Get the parameters
     const rawData = req.body
+    //Get the transaction ID
+    const transactionId = req.params.transactionId
     //Request validation
     const valid = verifyUpdateRequest(rawData, type)
     if (!valid.bool){
@@ -131,7 +133,7 @@ const updateSales = async (req,res) => {
     let data = valid.data
     
     try {
-        const { transactionId, ...payload } = data
+        const { ...payload } = data
         //Replace the sales entry
         const response = await api.put(`${type}/${transactionId}`, payload)
         //Return the API response
@@ -144,10 +146,9 @@ const updateSales = async (req,res) => {
 
 //Update a sales status
 const patchSales = async (req,res) => {
-    //Determine the sales type
-    const { type } = req.params
-    //Get the transaction id
-    const id = req.query?.id
+    //Determine the sales type and transaction ID
+    const type = req.params.type
+    const transactionId = req.params.transactionId
     //Get the transaction status and reason if void
     const param = req.body
     //Check for valid request type
@@ -155,12 +156,12 @@ const patchSales = async (req,res) => {
         return res.status(404).json({message: "Invalid request"})
     }
     //Check if the id and status exists
-    if (!id) return res.status(400).json({message: 'ID is required'})
+    if (!transactionId) return res.status(400).json({message: 'ID is required'})
     if (!param?.status) return res.status(400).json({message: 'Status is required'})
     
     try{
         //Check if the transaction exists
-        const transaction = await api.get(`${type}/${id}`)
+        const transaction = await api.get(`${type}/${transactionId}`)
         if (transaction.status != 200 || !transaction.data){
             return res.status(404).json({message: "Transaction ID is not found"})
         }
@@ -180,7 +181,7 @@ const patchSales = async (req,res) => {
         let param = valid.data
 
         //Patch the sales
-        const response = await api.patch(`${type}/${id}`, param)
+        const response = await api.patch(`${type}/${transactionId}`, param)
         const data = response.data
         //Return the response
         res.status(response.status).json({data})
@@ -193,26 +194,25 @@ const patchSales = async (req,res) => {
 
 //Delete a sales entry
 const deleteSales = async (req,res) => {
-    //Determine the sales type
-    const { type } = req.params
+    //Determine the sales type and transaction ID
+    const type = req.params
+    const transactionId = req.params.transactionId
     //Validate route
     if(!["quotes", "orders", "delivery_orders", "invoices", "credit_notes", "payments", "refunds"].includes(type)){
         return res.status(404).json({message: 'Invalid request'})
     }
     const api = `${baseURL}${type}`
-    //Get the transaction id
-    const id = req.query?.id
     //Check if the id exists
-    if (!id) return res.status(400).json({message: 'ID is required'})
+    if (!transactionId) return res.status(400).json({message: 'ID is required'})
     
     try{
         //Check the status of the transaction
-        const transaction = await api.get(`${type}/${id}`)
+        const transaction = await api.get(`${type}/${transactionId}`)
         if (transaction.status != 'void' || transaction.status != 'draft'){
             return res.status(400).json({message: "Unable to delete transaction with status other than void or draft"})
         }
         //Delete the sales
-        const response = await api.delete(`${type}/${id}`)
+        const response = await api.delete(`${type}/${transactionId}`)
         //Return the sales
         res.status(response.status).json({data: true})
     }
@@ -353,7 +353,7 @@ function verifyUpdateRequest(rawData, type){
 
     //Define the general parameters
     const generalWhitelist = [
-        "transactionId", "contact_id", "number", "number2", "date",
+        "contact_id", "number", "number2", "date",
         "currency_code", "exchange_rate", "tag_ids", "description",
         "remarks", "title", "billing_party", "show_shipping",
         "shipping_party", "shipping_info", "email", "files"
@@ -375,7 +375,7 @@ function verifyUpdateRequest(rawData, type){
 
     //Define general required parameters
     const generalRequired = [
-        "transactionId", "contact_id", "number",
+        "contact_id", "number",
         "date", "currency_code", "exchange_rate"
     ]
     //Define type specific required parameters
@@ -416,7 +416,7 @@ function verifyUpdateRequest(rawData, type){
 function verifyPatchRequest(rawData, currentStatus){
     //Define parameters
     const whitelist = [
-        "transactionId", "status", "void_reason"
+        "status", "void_reason"
     ];
     //Get only valid parameters
     let data = Object.fromEntries(
