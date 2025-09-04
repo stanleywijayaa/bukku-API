@@ -4,7 +4,7 @@ const journalController = require('../../logics/accounting/journalLogic');
 
 router.route('/')
     .get(journalController.getJournalList)
-    .post()
+    .post(journalController.createJournal)
     .put()
     .patch()
     .delete()

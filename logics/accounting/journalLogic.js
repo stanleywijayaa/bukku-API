@@ -62,7 +62,60 @@ const getJournal = async(req, res) => {
     }
 }
 
+const createJournal = async(req, res) => {
+    const {
+        contact_id,
+        currency_code,
+        date,
+        description,
+        exchange_rate,
+        files,
+        internal_note,
+        journal_items,
+        number,
+        number2,
+        remarks,
+        status,
+        tag_ids
+    } = req.body
+
+    if ( !date || !currency_code || !exchange_rate || !journal_items || !status) {
+        return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const allowedStatus = ["draft", "pending_approval", "ready"];
+    if (!allowedStatus.includes(status)) {
+        return res.status(400).json({ message: `Invalid status. Allowed: ${allowedStatus.join(", ")}` });
+    }
+
+    try {
+        const payload = {
+            date,
+            currency_code,
+            exchange_rate,
+            journal_items,
+            status
+        };
+        
+        if (contact_id) payload.contact_id = contact_id
+        if (description && description.length <= 255) payload.description = description;
+        if (files) payload.files = files;
+        if (internal_note) payload.internal_note = internal_note;
+        if (number && number.length <= 50) payload.number = number;
+        if (number2 && number2.length <= 50) payload.number2 = number2;
+        if (remarks) payload.remarks = remarks;
+        if (Array.isArray(tag_ids) && tag_ids.length <= 4) payload.tag_ids = tag_ids;
+        
+        const response = await api.post('/journal_entries', payload)
+        res.status(201).json(response.data)
+    } catch (err) {
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to create journal" });
+    }
+}
+
 module.exports = {
     getJournalList,
-    getJournal
+    getJournal,
+    createJournal
 }
