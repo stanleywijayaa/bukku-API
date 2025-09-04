@@ -55,7 +55,58 @@ const getAccount = async(req, res) => {
     }
 }
 
+const createAccount = async(req, res) => {
+    const {
+        name,
+        type,
+        system_type,
+        parent_id,
+        classification,
+        code,
+        description
+    } = req.body
+
+    if ( !name || !type ) {
+        return res.status(400).json({ message: "Missing required fields" });
+    }
+    if (name && name.length <= 255) return res.status(400).json({ message: `name must be below 255 characters`})
+    const allowedType = ["current_assets", "non_current_assets", "other_assets", 
+        "current_liabilities", "non_current_liabilities", "equity", "income", 
+        "other_income", "cost_of_sales", "expenses", "taxation"
+    ];
+    if (!allowedType.includes(type)) {
+        return res.status(400).json({ message: `Invalid type. Allowed: ${allowedType.join(", ")}` });
+    }
+
+    try {
+        const allowedSystem = ["bank_cash", "accounts_receivable", "accounts_payable",
+             "inventory", "credit_card", "fixed_assets", "depreciation", "my_epf_expense",
+             "my_socso_expense", "my_eis_expense", "my_salary_expense"
+        ]
+        const allowedClass = ["OPERATING", "INVESTING", "FINANCING"]
+        const payload = {
+            name,
+            type
+        };
+
+        if (system_type && allowedSystem.includes(system_type)) payload.system_type = system_type
+        if (typeof parent_id === "number") payload.parent_id = parent_id
+        if (classification && allowedClass.includes(classification)) payload.classification = classification
+        if (code && code.length <= 12) payload.code = code
+        if (description) payload.description = description;
+    
+        const response = await api.post('/accounts', payload)
+        res.status(201).json(response.data)
+    } catch (err) {
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to create account" });
+    }
+}
+
+
+
 module.exports = {
     getAccountList,
-    getAccount
+    getAccount,
+    createAccount
 }
