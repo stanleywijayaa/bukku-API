@@ -240,7 +240,7 @@ const updateMoneyIn = async (req, res) => {
 
     res.json(response.data);
   } catch (err) {
-    console.error("❌ Failed to update money-in transaction:", err.response?.data || err.message || err);
+    console.error("Failed", err.response?.data || err.message || err);
     res.status(500).json({
       message: "Failed to update money-in transaction",
       error: err.response?.data || err.message,
@@ -251,7 +251,27 @@ const updateMoneyIn = async (req, res) => {
 //update status (patch)
 const updateMoneyInStatus = async(req, res) => {
   const { transactionId, status, void_reason} = req.body;
-  if(!transactionId)return res.status(400).json({message: 'transaction id is required'})
+  if(!transactionId)return res.status(400).json({message: 'transaction id is required'});
+  try{
+    const record = await api.get(`/incomes/${transactionId}`);
+    const curStatus = record.data.status;
+    if (!allowedTransitions[curStatus]?.includes(status)) {
+            return res.status(400).json({ "message": `Invalid status transition from ${currentStatus} → ${status}`})
+        }
+        const payload = {status}
+        if (status === 'void'){
+            if(!void_reason) return res.status(400).json({ "message": "void_reason is required when voiding a transaction." });
+            payload.void_reason = void_reason
+        }
+        const result = await api.patch(`/incomes/${transactionId}`, payload)
+        res.json(result.data)
+  }catch(err){
+    console.error("Failed", err.response?.data || err.message || err)
+    res.status(500).json({
+      message: "Failed to update money-in status",
+      error: err.response?.data || err.message,
+    });
+  }
 
 }
 //delete
