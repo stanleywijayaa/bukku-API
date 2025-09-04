@@ -270,7 +270,7 @@ function verifyCreateRequest(data, type){
     }
 
     //Check for type-specific parameters
-    if (["quotes", "orders", "delivery_orders", "invoice", "credit_notes"].includes(type)){
+    if (["quotes", "orders", "delivery_orders", "invoices", "credit_notes"].includes(type)){
         //Check required parameter for (quotes, orders, delivery orders, invoice, and credit notes)
         if(!data.tax_mode || !data.form_items){
             return {bool: false, status: 400, message: "Missing required parameter(s)"}
@@ -280,12 +280,23 @@ function verifyCreateRequest(data, type){
             if(data.shipping_info && data.shipping_info.length > 100) return {bool: false, status: 400, message: "Invalid shipping info"}
             if(data.title && data.title.length > 255) return {bool: false, status: 400, message: "Invalid title"}
             if(!(data.tax_mode === "inclusive" || data.tax_mode === "exclusive")) return {bool: false, status: 400, message: "Invalid tax mode"}
+            if(type === 'invoices'){
+                if(!data.payment_mode ||
+                    (data.payment_mode === 'credit' && !data.term_items) ||
+                    (data.payment_mode === 'cash' && !data.deposit_items)
+                ) return {bool: false, status: 400, message: "Missing required parameter(s)"}
+                if(data.myinvois_action && !(["NORMAL", "VALIDATE", "EXTERNAL"].includes(data.myinvois_action))) return {bool: false, status: 400, message: "Invalid invoice action"}
+            }
+            if(type === 'credit_notes'){
+                if(data.myinvois_action && !(["NORMAL", "VALIDATE", "EXTERNAL"].includes(data.myinvois_action))) return {bool: false, status: 400, message: "Invalid invoice action"}
+            }
             return {bool: true}
         }
     }
     //Check required parameter for payments
     else if (type === 'payments'){
         if(!data.amount || !data.deposit_items) return {bool: false, status: 400, message: "Missing required parameter(s)"}
+        if(params.payment_mode && !(["credit", "cash"].includes(params.payment_mode))) return {bool: false, status: 400, message: "Invalid payment mode"}
         return {bool: true}
     }
     //Check required parameter for refunds
@@ -339,7 +350,7 @@ function verifyGetRequest(rawParams, type){
         return {bool: true, params: filteredParams}
     }
     //Validate invoice request
-    else if (type === 'invoice'){
+    else if (type === 'invoices'){
         //Validate parameters
         if(params.payment_mode && !(["credit", "cash"].includes(params.payment_mode))) return {bool: false, status: 400, message: "Invalid payment mode"}
         //Filter invalid parameters
@@ -373,6 +384,7 @@ function verifyGetRequest(rawParams, type){
     }
 }
 
+//Verify request for replacing sales entry
 function verifyUpdateRequest(body,type){
     if (type === 'quotes' || type === 'orders' || type === 'delivery_orders' || type === 'invoice' || type === 'credit_notes'){
         
