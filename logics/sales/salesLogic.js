@@ -286,6 +286,21 @@ function verifyCreateRequest(params, type){
     if(data.payment_mode && !(["credit", "cash"].includes(data.payment_mode))) return {bool: false, status: 400, message: "Invalid payment mode"}
     if(data.myinvois_action && !(["NORMAL", "VALIDATE", "EXTERNAL"].includes(data.myinvois_action))) return {bool: false, status: 400, message: "Invalid invoice action"}
 
+    //Define form_items structure
+    const formItemsStructure = [
+        "id", "transfer_item_id", "type", "account_id", "description", "service_date", "product_id", "product_unit_id", "location_id", "unit_price", "quantity", "discount", "tax_code_id", "classification_code", "children"
+    ]
+    //Validate items array
+    if(!Array.isArray(data.form_items)) return {bool: false, status: 400, message: "Invalid items structure"}
+    data.form_items.forEach((item) => {
+        const keys = Object.keys(item)
+        if(!formItemsStructure.includes(keys)) return {bool: false, status: 400, message: "Invalid items structure"}
+        for(key in keys){
+            if(key === 'type' && ![null, "bundle", "subtitle", "subtotal"].includes(item.key)) return {bool: false, status: 400, message: "Item contains invalid type"}
+            if(key === 'discount' && item.key.length > 14) return {bool: false, status: 400, message: "Item contains invalid discount"}
+        }
+    })
+
     //Return filtered parameters
     return {bool: true, data}
 }
