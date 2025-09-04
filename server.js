@@ -11,7 +11,10 @@ app.use(cors())
 app.use(cookieParser())
 
 app.use('/purchases', require('./routes/purchaseRoute'))
+
+//Accounting route
 app.use('/journal_entries', require('./routes/accounting/journalRoute'))
+app.use('/accounts', require('./routes/accounting/accountRoute'))
 
 //Sales route
 app.use('/sales', require('./routes/salesRoute'))
