@@ -120,8 +120,50 @@ const createJournal = async(req, res) => {
     }
 }
 
+const updateJournal = async(req, res) => {
+    if (!req?.body?.id) return res.status(400).json({ 'message': 'ID is required.'});
+    try {
+        await api.get(`/journal_entries/${req.body.id}`);
+
+        const allowedStatus = ["draft", "pending_approval", "ready", "void"]
+        const payload = {};
+
+        if (req.body.currency_code) payload.currency_code = req.body.currency_code;
+        if (req.body.date) payload.date = req.body.date;
+        if (req.body.description && req.body.description.length <= 255) payload.description = req.body.description;
+        if (typeof req.body.exchange_rate === "number") payload.exchange_rate = req.body.exchange_rate;
+        if (Array.isArray(req.body.files) && req.body.files.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) {
+            payload.files = req.body.files;
+        }
+        if (req.body.internal_note) payload.internal_note = req.body.internal_note
+        if (Array.isArray(req.body.journal_items) && req.body.journal_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) {
+            payload.journal_items = req.body.journal_items
+        }
+        if (req.body.number && req.body.number.length <= 50) payload.number = req.body.number;
+        if (req.body.number2 && req.body.number2.length <= 50) payload.number2 = req.body.number2;
+        if (req.body.remarks) payload.remarks = req.body.remarks;
+        if (req.body.status) {
+            if (!allowedStatus.includes(req.body.status)){
+                return res.status(400).json({message: "Invalid status"})
+            }
+            payload.status = req.body.status
+        }
+        if (Array.isArray(req.body.tag_ids) && req.body.tag_ids.length <= 4) payload.tag_ids = req.body.tag_ids;
+
+        const result = await api.put(`/journal_entries/${req.body.id}`, payload);
+        res.json(result.data);
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No journal entries matches ID ${req.body.id}` });
+        }
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to update journal" });
+    }
+}
+
 module.exports = {
     getJournalList,
     getJournal,
-    createJournal
+    createJournal,
+    updateJournal
 }
