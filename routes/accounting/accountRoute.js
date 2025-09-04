@@ -5,7 +5,7 @@ const accountController = require('../../logics/accounting/accountLogic');
 router.route('/')
     .get(accountController.getAccountList)
     .post(accountController.createAccount)
-    .put()
+    .put(accountController.updateAccount)
     .patch()
     .delete()
 

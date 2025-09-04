@@ -103,10 +103,59 @@ const createAccount = async(req, res) => {
     }
 }
 
+const updateAccount = async(req, res) => {
+    if (!req?.body?.id) return res.status(400).json({ 'message': 'ID is required.'});
+    try {
+        await api.get(`/accounts/${req.body.id}`);
 
+        const allowedType = ["current_assets", "non_current_assets", "other_assets", 
+            "current_liabilities", "non_current_liabilities", "equity", "income", 
+            "other_income", "cost_of_sales", "expenses", "taxation"
+        ];
+        const allowedSystem = ["bank_cash", "accounts_receivable", "accounts_payable",
+             "inventory", "credit_card", "fixed_assets", "depreciation", "my_epf_expense",
+             "my_socso_expense", "my_eis_expense", "my_salary_expense"
+        ]
+        const allowedClass = ["OPERATING", "INVESTING", "FINANCING"]
+        const payload = {};
+
+        if (req.body.name && req.body.name <= 255) payload.name = req.body.name
+        if (req.body.type) {
+            if (!allowedType.includes(req.body.type)){
+                return res.status(400).json({message: "Invalid type"})
+            }
+            payload.type = req.body.type
+        }
+        if (req.body.system_type) {
+            if (!allowedSystem.includes(req.body.system_type)){
+                return res.status(400).json({message: "Invalid system"})
+            }
+            payload.system_type = req.body.system_type
+        }
+        if (typeof req.body.parent_id === "number") payload.parent_id = req.body.parent_id
+        if (req.body.classification) {
+            if (!allowedClass.includes(req.body.classification)){
+                return res.status(400).json({message: "Invalid classification"})
+            }
+            payload.classification = req.body.classification
+        }
+        if (req.body.code && req.body.code <= 12) payload.code = req.body.code
+        if (req.body.description) payload.description = req.body.description
+
+        const result = await api.put(`/accounts/${req.body.id}`, payload);
+        res.json(result.data);
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No account matches ID ${req.body.id}` });
+        }
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to update account" });
+    }
+}
 
 module.exports = {
     getAccountList,
     getAccount,
-    createAccount
+    createAccount,
+    updateAccount
 }
