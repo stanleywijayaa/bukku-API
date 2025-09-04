@@ -224,6 +224,10 @@ const deleteSales = async (req,res) => {
 
 //Verify request for creating sales entry
 function verifyCreateRequest(params, type){
+    //Validate route
+    if(!["quotes", "orders", "delivery_orders", "invoices", "credit_notes", "payments", "refunds"].includes(type)){
+        return {bool: false, status: 404, message: "Invalid request"}
+    }
     //Define general parameters
     const generalWhitelist = [
         "contact_id","number","number2","date","currency_code",
@@ -245,64 +249,45 @@ function verifyCreateRequest(params, type){
     let data = Object.fromEntries(
         Object.entries(params).filter(([param]) => typeSpecificWhitelist[type].includes(param))
     );
-    //Check for required general parameters
-    if(!data.contact_id ||
-        !data.date ||
-        !data.currency_code ||
-        !data.exchange_rate ||
-        !data.status
-    ){
-        return {bool: false, status: 400, message: "Missing required parameter(s)"}
-    }
-    //Validate general parameters
-    else{
-        if(data.tag_ids && data.tag_ids.length > 4) return {bool: false, status: 400, message: "Invalid tag"}
-        if(!(/^\d{4}-\d{2}-\d{2}$/.test(data.date))) return {bool: false, status: 400, message: "Invalid date"}
-        if(data.description && data.description.length > 255) return {bool: false, status: 400, message: "Invalid description"}
-        try{new Intl.NumberFormat("en", {style: 'currency', currency: data.currency_code})} catch { return {bool: false, status: 400, message: "Invalid currency code"} }
-        if(!(["draft", "pending_approval", "ready"].includes(data.status))) return {bool: false, status: 400, message: "Invalid status"}
-        if((data.number && data.number.length > 50) || (data.number2 && data.number2.length > 50)) return {bool: false, status: 400, message: "Invalid transaction or reference number"}
-    }
 
-    //Check for type-specific parameters
-    if (["quotes", "orders", "delivery_orders", "invoices", "credit_notes"].includes(type)){
-        //Check required parameter for (quotes, orders, delivery orders, invoice, and credit notes)
-        if(!data.tax_mode || !data.form_items){
-            return {bool: false, status: 400, message: "Missing required parameter(s)"}
-        }
-        //Validate parameters for (quotes, orders, delivery orders, invoice, and credit notes)
-        else{
-            if(data.shipping_info && data.shipping_info.length > 100) return {bool: false, status: 400, message: "Invalid shipping info"}
-            if(data.title && data.title.length > 255) return {bool: false, status: 400, message: "Invalid title"}
-            if(!(data.tax_mode === "inclusive" || data.tax_mode === "exclusive")) return {bool: false, status: 400, message: "Invalid tax mode"}
-            if(type === 'invoices'){
-                if(!data.payment_mode ||
-                    (data.payment_mode === 'credit' && !data.term_items) ||
-                    (data.payment_mode === 'cash' && !data.deposit_items)
-                ) return {bool: false, status: 400, message: "Missing required parameter(s)"}
-                if(data.myinvois_action && !(["NORMAL", "VALIDATE", "EXTERNAL"].includes(data.myinvois_action))) return {bool: false, status: 400, message: "Invalid invoice action"}
-            }
-            if(type === 'credit_notes'){
-                if(data.myinvois_action && !(["NORMAL", "VALIDATE", "EXTERNAL"].includes(data.myinvois_action))) return {bool: false, status: 400, message: "Invalid invoice action"}
-            }
-            return {bool: true, data}
-        }
+    //Define general required parameters
+    const generalRequired = [
+        "contact_id", "date", "currency_code",
+        "exchange_rate", "status"
+    ]
+    //Define type specific required parameters
+    const typeSpecificRequired = {
+        quotes:         [...generalRequired, "tax_modes", "form_items"],
+        orders:         [...generalRequired, "tax_modes", "form_items"],
+        delivery_orders:[...generalRequired, "tax_modes", "form_items"],
+        invoices:       [...generalRequired, "tax_modes", "form_items", "payment_mode"],
+        credit_notes:   [...generalRequired, "tax_modes", "form_items"],
+        payments:       [...generalRequired, "amount", "deposit_items"],
+        payments:       [...generalRequired, "deposit_items"],
     }
-    //Check required parameter for payments
-    else if (type === 'payments'){
-        if(!data.amount || !data.deposit_items) return {bool: false, status: 400, message: "Missing required parameter(s)"}
-        if(params.payment_mode && !(["credit", "cash"].includes(params.payment_mode))) return {bool: false, status: 400, message: "Invalid payment mode"}
-        return {bool: true, data}
-    }
-    //Check required parameter for refunds
-    else if (type === 'refunds'){
-        if(!data?.deposit_items) return {bool: false, status: 400, message: "Missing required parameter(s)"}
-        return {bool: true, data}
-    }
-    //Handle invalid route
-    else {
-        return {bool: false, status: 404, message: "Invalid request"}
-    }
+    //Check for required parameters
+    const provided = Object.keys(data);
+    const missing = typeSpecificRequired[type].filter(param => !provided.includes(param));
+    //Return missing parameter(s) message
+    if (missing.length > 0) return { bool: false, status: 400, message: `Missing required parameter(s): ${missing.join(", ")}`}
+
+    //Validate general parameters
+    if(data.tag_ids && data.tag_ids.length > 4) return {bool: false, status: 400, message: "Invalid tag"}
+    if(!(/^\d{4}-\d{2}-\d{2}$/.test(data.date))) return {bool: false, status: 400, message: "Invalid date"}
+    if(data.description && data.description.length > 255) return {bool: false, status: 400, message: "Invalid description"}
+    try{new Intl.NumberFormat("en", {style: 'currency', currency: data.currency_code})} catch { return {bool: false, status: 400, message: "Invalid currency code"} }
+    if(!(["draft", "pending_approval", "ready"].includes(data.status))) return {bool: false, status: 400, message: "Invalid status"}
+    if((data.number && data.number.length > 50) || (data.number2 && data.number2.length > 50)) return {bool: false, status: 400, message: "Invalid transaction or reference number"}
+
+    //Validate optional parameters
+    if(data.shipping_info && data.shipping_info.length > 100) return {bool: false, status: 400, message: "Invalid shipping info"}
+    if(data.title && data.title.length > 255) return {bool: false, status: 400, message: "Invalid title"}
+    if(!(data.tax_mode === "inclusive" || data.tax_mode === "exclusive")) return {bool: false, status: 400, message: "Invalid tax mode"}
+    if(data.payment_mode && !(["credit", "cash"].includes(data.payment_mode))) return {bool: false, status: 400, message: "Invalid payment mode"}
+    if(data.myinvois_action && !(["NORMAL", "VALIDATE", "EXTERNAL"].includes(data.myinvois_action))) return {bool: false, status: 400, message: "Invalid invoice action"}
+
+    //Return filtered parameters
+    return {bool: true, data}
 }
 
 //Verify request for searching sales entry
