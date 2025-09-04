@@ -267,3 +267,36 @@ const updateMoneyOutStatus = async(req, res) => {
     });
   }
 }
+
+const deleteMoneyOut = async(req, res) => {
+  const { transactionId } = req.params;
+  if(!transactionId) return res.status(400).json({message: 'transaction id is required'});
+
+  try{
+    const record = await api.get(`/expenses/${transactionId}`)
+    const curStatus = record.data.status;
+
+    if (!["draft", "void"].includes(curStatus)) {
+      return res.status(400).json({
+        message: `Cannot delete transaction with status "${curStatus}". Only draft and void can be deleted.`,
+      });
+    }
+    const response = await api.delete(`/expenses/${transactionId}`);
+    res.json(response.data)
+  }catch(err){
+    console.error("Failed", err.response?.data || err.message || err);
+    res.status(500).json({
+      message: "Failed to delete money-in transaction",
+      error: err.response?.data || err.message,
+    });
+  }
+}
+
+module.exports = {
+    createMoneyOut,
+    getMoneyOutList,
+    getMoneyOut,
+    updateMoneyOut,
+    updateMoneyOutStatus,
+    deleteMoneyOut
+}
