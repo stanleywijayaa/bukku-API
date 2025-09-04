@@ -57,8 +57,29 @@ const createTag = async(req, res) => {
     }
 }
 
+const updateTag = async(req, res) => {
+    if (!req?.body?.id) return res.status(400).json({ 'message': 'ID is required.'});
+    try {
+        await api.get(`/tags/${req.body.id}`);
+
+        const payload = {};
+        if (typeof req.body.tag_group_id === "number") payload.tag_group_id = req.body.tag_group_id;
+        if (req.body.name) payload.name = req.body.name;
+        
+        const result = await api.put(`/tags/${req.body.id}`, payload);
+        res.json(result.data);
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No tag matches ID ${req.body.id}` });
+        }
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to update tag" });
+    }
+}
+
 module.exports = {
     getTagList,
     getTag,
-    createTag
+    createTag,
+    updateTag
 }
