@@ -51,6 +51,18 @@ const getJournalList = async(req, res) => {
     }
 }
 
+const getJournal = async(req, res) => {
+    try {
+        const {id} = req.params
+        const response = await api.get(`/journal_entries/${id}`)
+        res.json(response.data)
+    } catch (err){
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to fetch journal" });
+    }
+}
+
 module.exports = {
-    getJournalList
+    getJournalList,
+    getJournal
 }
