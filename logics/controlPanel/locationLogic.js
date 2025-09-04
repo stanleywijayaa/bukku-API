@@ -72,8 +72,36 @@ const createLocation = async(req, res) => {
     }
 }
 
+const updateLocation = async(req, res) => {
+    if (!req?.body?.id) return res.status(400).json({ 'message': 'ID is required.'});
+    try {
+        await api.get(`/location/${req.body.id}`);
+
+        const payload = {};
+
+        if (req.body.code) payload.code = req.body.code;
+        if (req.body.name) payload.name = req.body.name;
+        if (req.body.street) payload.street = req.body.street;
+        if (req.body.city) payload.city = req.body.city
+        if (req.body.state) payload.state = req.body.state
+        if (req.body.postcode) payload.postcode = req.body.postcode
+        if (req.body.country_code) payload.country_code = req.body.country_code
+        if (req.body.remarks) payload.remarks = req.body.remarks
+        
+        const result = await api.put(`/location/${req.body.id}`, payload);
+        res.json(result.data);
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No location matches ID ${req.body.id}` });
+        }
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to update location" });
+    }
+}
+
 module.exports = {
     getLocationList,
     getLocation,
-    createLocation
+    createLocation,
+    updateLocation
 }
