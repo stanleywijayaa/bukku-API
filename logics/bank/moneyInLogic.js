@@ -256,7 +256,7 @@ const updateMoneyInStatus = async(req, res) => {
     const record = await api.get(`/incomes/${transactionId}`);
     const curStatus = record.data.status;
     if (!allowedTransitions[curStatus]?.includes(status)) {
-            return res.status(400).json({ "message": `Invalid status transition from ${currentStatus} → ${status}`})
+            return res.status(400).json({ "message": `Invalid status transition from ${curStatus} → ${status}`})
         }
         const payload = {status}
         if (status === 'void'){
@@ -272,9 +272,32 @@ const updateMoneyInStatus = async(req, res) => {
       error: err.response?.data || err.message,
     });
   }
-
 }
+
 //delete
+const deleteMoneyIn = async(req, res) => {
+  const { transactionId } = req.params;
+  if(!transactionId) return res.status(400).json({message: 'transaction id is required'});
+
+  try{
+    const record = await api.get(`/incomes/${transactionId}`)
+    const curStatus = record.data.status;
+
+    if (!["draft", "void"].includes(curStatus)) {
+      return res.status(400).json({
+        message: `Cannot delete transaction with status "${curStatus}". Only draft and void can be deleted.`,
+      });
+    }
+    const response = await api.delete(`/incomes/${transactionId}`);
+    res.json(response.data)
+  }catch(err){
+    console.error("Failed", err.response?.data || err.message || err);
+    res.status(500).json({
+      message: "Failed to delete money-in transaction",
+      error: err.response?.data || err.message,
+    });
+  }
+}
 
 module.exports = {
     createMoneyIn,
