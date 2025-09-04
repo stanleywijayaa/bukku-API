@@ -99,9 +99,28 @@ const updateLocation = async(req, res) => {
     }
 }
 
+const updateLocationArchive = async (req, res) => {
+    const {id, is_archived} = req.body
+    if (!id || !is_archived) return res.status(400).json({ "message": "ID and archive are required"})
+    if (typeof is_archived !== "boolean") return res.status(400).json({ "message" : "is_archived must be boolean"})
+    try {
+        await api.get(`/location/${id}`)
+        const payload = {is_archived}
+        const result = await api.patch(`/location/${id}`, payload)
+        res.json(result.data)
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No location matches ID ${id}` });
+        }
+        console.error("❌ Failed:", err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to update location archive" });
+    }
+}
+
 module.exports = {
     getLocationList,
     getLocation,
     createLocation,
-    updateLocation
+    updateLocation,
+    updateLocationArchive
 }

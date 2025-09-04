@@ -6,7 +6,7 @@ router.route('/')
     .get(locationController.getLocationList)
     .post(locationController.createLocation)
     .put(locationController.updateLocation)
-    .patch()
+    .patch(locationController.updateLocationArchive)
     .delete()
 
 router.route('/:id')
