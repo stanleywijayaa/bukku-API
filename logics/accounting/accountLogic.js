@@ -171,10 +171,26 @@ const updateAccountArchive = async (req, res) => {
     }
 }
 
+const deleteAccount = async (req, res) => {
+    if (!req?.body?.id) return res.status(400).json({"message": "Delete ID required"})
+    try {
+        await api.get(`/accounts/${req.body.id}`)
+        const result = await api.delete(`/accounts/${req.body.id}`)
+        res.json(result.data)
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No account matches ID ${req.body.id}` });
+        }
+        console.error("❌ Failed:", err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to delete account" });
+    }
+}
+
 module.exports = {
     getAccountList,
     getAccount,
     createAccount,
     updateAccount,
-    updateAccountArchive
+    updateAccountArchive,
+    deleteAccount
 }
