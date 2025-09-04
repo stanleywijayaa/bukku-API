@@ -380,6 +380,7 @@ function verifyUpdateRequest(rawData, type){
     if(!["quotes", "orders", "delivery_orders", "invoices", "credit_notes", "payments", "refunds"].includes(type)){
         return {bool: false, status: 404, message: "Invalid request"}
     }
+
     //Define the general parameters
     const generalWhitelist = [
         "transactionId", "contact_id", "number", "number2", "date",
@@ -401,6 +402,7 @@ function verifyUpdateRequest(rawData, type){
     let data = Object.fromEntries(
         Object.entries(rawData).filter(([param]) => typeSpecificWhitelist[type].includes(param))
     );
+
     //Define general required parameters
     const generalRequired = [
         "transactionId", "contact_id", "number",
@@ -435,7 +437,7 @@ function verifyUpdateRequest(rawData, type){
     if(data.title && data.title.length > 255) return {bool: false, status: 400, message: "Invalid title"}
     if(!(data.tax_mode === "inclusive" || data.tax_mode === "exclusive")) return {bool: false, status: 400, message: "Invalid tax mode"}
     if(data.myinvois_action && !(["NORMAL", "VALIDATE", "EXTERNAL"].includes(data.myinvois_action))) return {bool: false, status: 400, message: "Invalid invoice action"}
-    
+
     //Return filtered parameters
     return {bool: true, data}
 }
@@ -446,28 +448,17 @@ function verifyPatchRequest(rawData, currentStatus){
     const whitelist = [
         "transactionId", "status", "void_reason"
     ];
-    //Define required parameters
-    const required = [
-        "transactionId", "status"
-    ]
     //Get only valid parameters
     let data = Object.fromEntries(
         Object.entries(rawData).filter(([param]) => whitelist.includes(param))
     )
-    //Check for required parameters
-    const missing = required.filter(param => !Object.keys(data).includes(param));
-
-    if (missing.length > 0) {
-        return {bool: false, status: 400, message: "Missing required parameter(s)"}
-    }
-
+    //Define allowed status transition
     const allowedUpdate = {
         draft: ["pending_approval", "ready"],
         pending_approval: ["ready"],
         ready: ["void"],
         void: ["ready"]
     }
-
     //Check if the update path is allowed
     if (!allowedUpdate[currentStatus].includes(data.status)) {
         return {bool: false, status: 400, message: 'Update not allowed'}
@@ -478,6 +469,7 @@ function verifyPatchRequest(rawData, currentStatus){
         return {bool: false, status: 400, message: 'Voiding transaction without reason'}
     }
 
+    //Return the filtered parameters
     return {bool: true, data}
 }
 
