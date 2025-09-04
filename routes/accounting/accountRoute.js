@@ -6,7 +6,7 @@ router.route('/')
     .get(accountController.getAccountList)
     .post(accountController.createAccount)
     .put(accountController.updateAccount)
-    .patch()
+    .patch(accountController.updateAccountArchive)
     .delete()
 
 router.route('/:id')
