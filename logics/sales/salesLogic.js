@@ -307,6 +307,10 @@ function verifyCreateRequest(params, type){
 
 //Verify request for searching sales entry
 function verifyGetRequest(rawParams, type){
+    //Validate route
+    if(!["quotes", "orders", "delivery_orders", "invoices", "credit_notes", "payments", "refunds"].includes(type)){
+        return {bool: false, status: 404, message: "Invalid request"}
+    }
     //Define the general parameters
     const generalWhitelist = [
         "search", "custom_search", "contact_id",
@@ -327,6 +331,7 @@ function verifyGetRequest(rawParams, type){
     let params = Object.fromEntries(
         Object.entries(rawParams).filter(([param]) => typeSpecificWhitelist[type].includes(param))
     );
+
     //Validate general parameters
     if(params.search && params.search.length > 100) return {bool: false, status: 400, message: "Invalid search length"}
     if(params.custom_search && params.custom_search.length > 100) return {bool: false, status: 400, message: "Invalid custom search length"}
@@ -339,39 +344,19 @@ function verifyGetRequest(rawParams, type){
     if(params.sort_dir && !(['asc', 'desc'].includes(params.sort_dir))) return {bool: false, status: 400, message: "Invalid payment status"}
     if(params.sort_by && !(["number", "date", "contact_name", "number2", "title", "description", "amount", "balance", "created_at"].includes(params.sort_by))) return {bool: false, status: 400, message: "Invalid sort type"}
 
-    //##Validate type-specific parameters##
-    //Validate quotes, orders and delivery orders request
-    if (type === 'quotes' || type === 'orders' || type === 'delivery_orders'){
-        //Validate parameters
-        if(params.transfer_status && !(["ALL", "NOT_TRANSFERRED", "PARTIAL_TRANSFERRED", "TRANSFERRED"].includes(params.transfer_status))) return {bool: false, status: 400, message: "Invalid transfer status"}
-        if(params.sort_by && params.sort_by === 'balance') return {bool: false, status: 400, message: "Invalid sort type"}
-        return {bool: true, params}
-    }
-    //Validate invoice request
-    else if (type === 'invoices'){
-        //Validate parameters
-        if(params.payment_mode && !(["credit", "cash"].includes(params.payment_mode))) return {bool: false, status: 400, message: "Invalid payment mode"}
-        return {bool: true, params}
-    }
-    //Validate credit notes request
-    else if (type === 'credit_notes'){
-        return {bool: true, params}
-    }
-    //Validate payments requests
-    else if (type === 'payments'){
-        //Validate parameters
-        if(params.sort_by && params.sort_by === 'title') return {bool: false, status: 400, message: "Invalid sort type"}
-        return {bool: true, params}
-    }
-    else if (type === 'refunds'){
-        //Validate parameters
-        if(params.sort_by && !(["amount", "balance"].includes(params.sort_by))) return {bool: false, status: 400, message: "Invalid sort type"}
-        return {bool: true, params}
-    }
-    //Handle invalid requests
-    else {
-        return {bool: false, status: 404, message: "Invalid request"}
-    }
+    //Validate optional parameters
+    if(params.transfer_status && !(["ALL", "NOT_TRANSFERRED", "PARTIAL_TRANSFERRED", "TRANSFERRED"].includes(params.transfer_status))) return {bool: false, status: 400, message: "Invalid transfer status"}
+    if(params.payment_mode && !(["credit", "cash"].includes(params.payment_mode))) return {bool: false, status: 400, message: "Invalid payment mode"}
+
+    /*Validate type specific parameters*/
+    //Validate quotes, orders and delivery sort parameter
+    if(['quotes','orders','delivery_orders'].includes(type) && params.sort_by && params.sort_by === 'balance') return {bool: false, status: 400, message: "Invalid sort type"}
+    //Validate payments sort parameters
+    if(type === 'payments' && params.sort_by && params.sort_by === 'title') return {bool: false, status: 400, message: "Invalid sort type"}
+    //Validate refunds sort parameters
+    if(type === 'refunds' && params.sort_by && !(["amount", "balance"].includes(params.sort_by))) return {bool: false, status: 400, message: "Invalid sort type"}
+    //Return filtered parameters
+    return {bool: true, params}
 }
 
 //Verify request for replacing sales entry
@@ -424,18 +409,18 @@ function verifyUpdateRequest(rawData, type){
     //Return missing parameter(s) message
     if (missing.length > 0) return { bool: false, status: 400, message: `Missing required parameter(s): ${missing.join(", ")}`}
 
-    //Validate general parameters
-    if(data.tag_ids && data.tag_ids.length > 4) return {bool: false, status: 400, message: "Invalid tag"}
+    //Validate required parameters
     if(!(/^\d{4}-\d{2}-\d{2}$/.test(data.date))) return {bool: false, status: 400, message: "Invalid date"}
-    if(data.description && data.description.length > 255) return {bool: false, status: 400, message: "Invalid description"}
     if(!(["draft", "pending_approval", "ready"].includes(data.status))) return {bool: false, status: 400, message: "Invalid status"}
     try{new Intl.NumberFormat("en", {style: 'currency', currency: data.currency_code})} catch { return {bool: false, status: 400, message: "Invalid currency code"} }
     if(data.number.length > 50 || (data.number2 && data.number2.length > 50)) return {bool: false, status: 400, message: "Invalid transaction or reference number"}
 
-    //Validate type specific parameters
+    //Validate optional parameters
+    if(data.tag_ids && data.tag_ids.length > 4) return {bool: false, status: 400, message: "Invalid tag"}
+    if(data.description && data.description.length > 255) return {bool: false, status: 400, message: "Invalid description"}
     if(data.shipping_info && data.shipping_info.length > 100) return {bool: false, status: 400, message: "Invalid shipping info"}
     if(data.title && data.title.length > 255) return {bool: false, status: 400, message: "Invalid title"}
-    if(!(data.tax_mode === "inclusive" || data.tax_mode === "exclusive")) return {bool: false, status: 400, message: "Invalid tax mode"}
+    if(data.tax_mode && !(data.tax_mode === "inclusive" || data.tax_mode === "exclusive")) return {bool: false, status: 400, message: "Invalid tax mode"}
     if(data.myinvois_action && !(["NORMAL", "VALIDATE", "EXTERNAL"].includes(data.myinvois_action))) return {bool: false, status: 400, message: "Invalid invoice action"}
 
     //Return filtered parameters
