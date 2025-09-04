@@ -83,6 +83,10 @@ const createJournal = async(req, res) => {
         return res.status(400).json({ message: "Missing required fields" });
     }
 
+    if (isNaN(Number(exchange_rate))) return res.status(400).json({ message: `exchange_rate must be number`})
+    if (!(Array.isArray(journal_items) && journal_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f)))) {
+        return res.status(400).json({ message: `form_items must be array`})
+    }
     const allowedStatus = ["draft", "pending_approval", "ready"];
     if (!allowedStatus.includes(status)) {
         return res.status(400).json({ message: `Invalid status. Allowed: ${allowedStatus.join(", ")}` });
@@ -97,9 +101,11 @@ const createJournal = async(req, res) => {
             status
         };
         
-        if (contact_id) payload.contact_id = contact_id
+        if (typeof contact_id === "number") payload.contact_id = contact_id
         if (description && description.length <= 255) payload.description = description;
-        if (files) payload.files = files;
+        if (Array.isArray(files) && files.every(f => typeof f === "object" && f !== null && !Array.isArray(f))) {
+            payload.files = files;
+        }
         if (internal_note) payload.internal_note = internal_note;
         if (number && number.length <= 50) payload.number = number;
         if (number2 && number2.length <= 50) payload.number2 = number2;

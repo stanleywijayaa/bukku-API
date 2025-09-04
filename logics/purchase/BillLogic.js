@@ -93,7 +93,7 @@ const createBill = async(req, res) => {
 
     if (isNaN(Number(contact_id))) return res.status(400).json({ message: `contact_id must be number.`})
     if (isNaN(Number(exchange_rate))) return res.status(400).json({ message: `exchange_rate must be number`})
-    if (!(Array.isArray(form_items) && req.body.form_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f)))) {
+    if (!(Array.isArray(form_items) && form_items.every(f => typeof f === "object" && f !== null && !Array.isArray(f)))) {
         return res.status(400).json({ message: `form_items must be array`})
     }
 
