@@ -29,7 +29,7 @@ const allowedTransitions = {
 //create
 const createMoneyIn = async(req, res) => {
     const{ 
-        contact_id: contact_id, 
+        contact_id, 
         billing_party, 
         billing_contact_person_id, 
         billing_contact_person, 
