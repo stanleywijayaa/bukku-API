@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const tagController = require('../../logics/controlPanel/tagLogic');
+const tagGController = require('../../logics/controlPanel/tagGroupLogic')
 
 router.route('/')
     .get(tagController.getTagList)
@@ -11,12 +12,12 @@ router.route('/')
 router.route('/:id')
     .get(tagController.createTag)
 
-router.route('/1')
-    .get()
+router.route('/groups')
+    .get(tagGController.getTagGroupList)
     .post()
     .put()
     .patch()
     .delete()
 
-router.route('/1/:id')
+router.route('/groups/:id')
     .get()
