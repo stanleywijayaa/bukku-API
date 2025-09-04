@@ -18,6 +18,7 @@ app.use('/accounts', require('./routes/accounting/accountRoute'))
 
 //ControlPanel route
 app.use('/location', require('./routes/controlPanel/locationRoute'))
+app.use('/tags', require('./routes/controlPanel/tagRoute'))
 
 //Sales route
 app.use('/sales', require('./routes/salesRoute'))
