@@ -105,3 +105,17 @@ const getTransferList = async (req, res) => {
     });
   }
 };
+
+const getTransfer = async(req, res) => {
+    const { transactionId } = req.params;
+    if (!transactionId || isNaN(transactionId)) {
+      return res.status(400).json({ message: "transactionId is required and must be a number" });
+    }
+    try{
+        const response = await api.get(`/transfers/${transactionId}`);
+        res.json(response.data);
+    }catch(err){
+        console.error('Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to fetch transfer record" });
+    }
+}
