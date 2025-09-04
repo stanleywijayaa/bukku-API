@@ -117,10 +117,27 @@ const updateLocationArchive = async (req, res) => {
     }
 }
 
+const deleteLocation = async (req, res) => {
+    if (!req?.body?.id) return res.status(400).json({"message": "Delete ID required"})
+    try {
+        await api.get(`/location/${req.body.id}`)
+        const result = await api.delete(`/location/${req.body.id}`)
+        res.json(result.data)
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No location matches ID ${req.body.id}` });
+        }
+        console.error("❌ Failed:", err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to delete location" });
+    }
+}
+
+
 module.exports = {
     getLocationList,
     getLocation,
     createLocation,
     updateLocation,
-    updateLocationArchive
+    updateLocationArchive,
+    deleteLocation
 }
