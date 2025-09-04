@@ -90,6 +90,10 @@ const getSalesList = async (req,res) => {
 const getSales = async (req,res) => {
     //Determine the sales type
     const { type } = req.params
+    //Validate route
+    if(!["quotes", "orders", "delivery_orders", "invoices", "credit_notes", "payments", "refunds"].includes(type)){
+        return res.status(404).json({message: 'Invalid request'})
+    }
     //Get the transaction id
     const id = req.query?.id
     //Check if the id exists
@@ -112,6 +116,8 @@ const getSales = async (req,res) => {
 const updateSales = async (req,res) => {
     //Determine the sales type
     const { type } = req.params
+    //Check if type exists
+    if (!type) return res.status(400).json({message: 'Invalid route'})
     //Get the parameters
     const data = req.body
     //Check for required parameters
@@ -225,6 +231,10 @@ const patchSales = async (req,res) => {
 const deleteSales = async (req,res) => {
     //Determine the sales type
     const { type } = req.params
+    //Validate route
+    if(!["quotes", "orders", "delivery_orders", "invoices", "credit_notes", "payments", "refunds"].includes(type)){
+        return res.status(404).json({message: 'Invalid request'})
+    }
     const api = `${baseURL}${type}`
     //Get the transaction id
     const id = req.query?.id
@@ -255,8 +265,8 @@ function verifyCreateRequest(data, type){
         !data.date ||
         !data.currency_code ||
         !data.exchange_rate ||
-        !data.status)
-    {
+        !data.status
+    ){
         return {bool: false, status: 400, message: "Missing required parameter(s)"}
     }
     //Validate general parameters
@@ -385,9 +395,37 @@ function verifyGetRequest(rawParams, type){
 }
 
 //Verify request for replacing sales entry
-function verifyUpdateRequest(body,type){
-    if (type === 'quotes' || type === 'orders' || type === 'delivery_orders' || type === 'invoice' || type === 'credit_notes'){
+function verifyUpdateRequest(data, type){
+    //Check for required general parameters
+    if(!data.contact_id ||
+        !data.number ||
+        !data.date ||
+        !data.currency_code ||
+        !data.exchange_rate
+    ){
+        return {bool: false, status: 400, message: "Missing required parameter(s)"}
+    }
+    //Validate general parameters
+    else{
+        if(data.tag_ids && data.tag_ids.length > 4) return {bool: false, status: 400, message: "Invalid tag"}
+        if(!(/^\d{4}-\d{2}-\d{2}$/.test(data.date))) return {bool: false, status: 400, message: "Invalid date"}
+        if(data.description && data.description.length > 255) return {bool: false, status: 400, message: "Invalid description"}
+        if(!(["draft", "pending_approval", "ready"].includes(data.status))) return {bool: false, status: 400, message: "Invalid status"}
+        try{new Intl.NumberFormat("en", {style: 'currency', currency: data.currency_code})} catch { return {bool: false, status: 400, message: "Invalid currency code"} }
+        if(data.number.length > 50 || (data.number2 && data.number2.length > 50)) return {bool: false, status: 400, message: "Invalid transaction or reference number"}
+    }
+
+    if (type === 'quotes' || type === 'orders'){
         
+    }
+    else if (type === 'delivery_orders'){
+
+    }
+    else if (type === 'invoice'){
+
+    }
+    else if (type === 'credit_notes'){
+
     }
     else if (type === 'payments'){
 
