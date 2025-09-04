@@ -44,10 +44,12 @@ const getSalesList = async (req,res) => {
     //Get the raw params
     const rawParams = req.query
     //Request validation
-    const {valid, params} = verifyGetRequest(rawParams, type)
+    const valid = verifyGetRequest(rawParams, type)
     if (!valid.bool){
         return res.status(valid.status).json({message: valid.message})
     }
+    //Get the valid parameters
+    let params = valid.params
 
     //Get the data
     try{
@@ -119,51 +121,19 @@ const updateSales = async (req,res) => {
     //Check if type exists
     if (!type) return res.status(400).json({message: 'Invalid route'})
     //Get the parameters
-    const data = req.body
-    //Check for required parameters
-    if (type == 'refunds') {
-        if(!data?.transactionId ||
-            !data?.contact_id ||
-            !data?.number ||
-            !data?.date ||
-            !data?.currency_code ||
-            !data?.exchange_rate ||
-            !data?.deposit_items
-        ){
-            return res.status(400).json({message: 'Missing required parameters'})
-        }
+    const rawData = req.body
+    //Request validation
+    const valid = verifyUpdateRequest(rawData, type)
+    if (!valid.bool){
+        return res.status(valid.status).json({message: valid.message})
     }
-    else if (type == 'payments'){
-        if(!data?.transactionId ||
-            !data?.contact_id ||
-            !data?.number ||
-            !data?.date ||
-            !data?.currency_code ||
-            !data?.exchange_rate ||
-            !data?.amount ||
-            !data?.deposit_items
-        ){
-            return res.status(400).json({message: 'Missing required parameters'})
-        }
-    }
-    else{
-        if(!data?.transactionId ||
-            !data?.contact_id ||
-            !data?.date ||
-            !data?.currency_code ||
-            !data?.exchange_rate ||
-            !data?.tax_mode ||
-            !data?.form_items ||
-            !data?.status
-        ){
-            return res.status(400).json({message: 'Missing required parameters'})
-        }
-    }
-
+    //Get the valid parameters
+    let data = valid.data
+    
     try {
-        const { id, ...payload } = data
+        const { transactionId, ...payload } = data
         //Replace the sales entry
-        const response = await api.put(`${type}/${id}`, payload)
+        const response = await api.put(`${type}/${transactionId}`, payload)
         //Return the API response
         res.status(response.status).json({data: response.data})
     } catch (error) {
@@ -259,7 +229,28 @@ const deleteSales = async (req,res) => {
 }
 
 //Verify request for creating sales entry
-function verifyCreateRequest(data, type){
+function verifyCreateRequest(params, type){
+    //Define general parameters
+    const generalWhitelist = [
+        "contact_id","number","number2","date","currency_code",
+        "exchange_rate","billing_party","show_shipping",
+        "shipping_party","shipping_info","tag_ids","title",
+        "description","remarks","tax_mode","status","email","files"
+    ];
+    //Define the type specific parameters
+    const typeSpecificWhitelist = {
+        quotes:         [...generalWhitelist, "term_id", "form_items"],
+        orders:         [...generalWhitelist, "term_id", "form_items"],
+        delivery_orders:[...generalWhitelist, "form_items"],
+        invoices:       [...generalWhitelist, "payment_mode","term_items","deposit_items","customs_form_no","customs_k2_form_no","incoterms","myinvois_action","form_items"],
+        credit_notes:   [...generalWhitelist, "link_items","customs_form_no","customs_k2_form_no","incoterms","myinvois_action","form_items"],
+        payments:       [...generalWhitelist, "amount","link_items","deposit_items"],
+        refunds:        [...generalWhitelist, "link_items","deposit_items"]
+    };
+    //Get only valid parameters
+    let data = Object.fromEntries(
+        Object.entries(params).filter(([param]) => typeSpecificWhitelist[type].includes(param))
+    );
     //Check for required general parameters
     if(!data.contact_id ||
         !data.date ||
@@ -300,19 +291,19 @@ function verifyCreateRequest(data, type){
             if(type === 'credit_notes'){
                 if(data.myinvois_action && !(["NORMAL", "VALIDATE", "EXTERNAL"].includes(data.myinvois_action))) return {bool: false, status: 400, message: "Invalid invoice action"}
             }
-            return {bool: true}
+            return {bool: true, data}
         }
     }
     //Check required parameter for payments
     else if (type === 'payments'){
         if(!data.amount || !data.deposit_items) return {bool: false, status: 400, message: "Missing required parameter(s)"}
         if(params.payment_mode && !(["credit", "cash"].includes(params.payment_mode))) return {bool: false, status: 400, message: "Invalid payment mode"}
-        return {bool: true}
+        return {bool: true, data}
     }
     //Check required parameter for refunds
     else if (type === 'refunds'){
         if(!data?.deposit_items) return {bool: false, status: 400, message: "Missing required parameter(s)"}
-        return {bool: true}
+        return {bool: true, data}
     }
     //Handle invalid route
     else {
@@ -322,21 +313,26 @@ function verifyCreateRequest(data, type){
 
 //Verify request for searching sales entry
 function verifyGetRequest(rawParams, type){
-    //Set the allowed filter parameters
-    const allowedParams = [
+    //Define the general parameters
+    const generalWhitelist = [
         "search", "custom_search", "contact_id",
-        "date_from", "date_to", "status", "payment_status",
-        "email_status", "transfer_status", "payment_mode",
-        "page", "page_size", "sort_by", "sort_dir", "account_id"
+        "date_from", "date_to",
+        "page", "page_size", "sort_by", "sort_dir"
     ];
-    //Get all valid query parameters
-    let params = Object.keys(rawParams)
-    .filter(key => allowedParams.includes(key))
-    .reduce((obj, key) => {
-        obj[key] = rawParams[key];
-        return obj;
-    }, {});
-    
+    //Define the type specific parameters
+    const typeSpecificWhitelist = {
+        quotes:         [...generalWhitelist, "status", "transfer_status"],
+        orders:         [...generalWhitelist, "status", "transfer_status"],
+        delivery_orders:[...generalWhitelist, "status", "transfer_status"],
+        invoices:       [...generalWhitelist, "status", "payment_status", "email_status", "payment_mode"],
+        credit_notes:   [...generalWhitelist, "status", "email_status"],
+        payments:       [...generalWhitelist, "status", "email_status"],
+        refunds:        [...generalWhitelist, "status", "email_status"]
+    };
+    //Filter only valid parameters
+    let params = Object.fromEntries(
+        Object.entries(rawParams).filter(([param]) => typeSpecificWhitelist[type].includes(param))
+    );
     //Validate general parameters
     if(params.search && params.search.length > 100) return {bool: false, status: 400, message: "Invalid search length"}
     if(params.custom_search && params.custom_search.length > 100) return {bool: false, status: 400, message: "Invalid custom search length"}
@@ -355,38 +351,28 @@ function verifyGetRequest(rawParams, type){
         //Validate parameters
         if(params.transfer_status && !(["ALL", "NOT_TRANSFERRED", "PARTIAL_TRANSFERRED", "TRANSFERRED"].includes(params.transfer_status))) return {bool: false, status: 400, message: "Invalid transfer status"}
         if(params.sort_by && params.sort_by === 'balance') return {bool: false, status: 400, message: "Invalid sort type"}
-        //Filter invalid parameters
-        const filteredParams = params.filter(param => !['payment_status', 'payment_mode', 'account_id'].includes(param))
-        return {bool: true, params: filteredParams}
+        return {bool: true, params}
     }
     //Validate invoice request
     else if (type === 'invoices'){
         //Validate parameters
         if(params.payment_mode && !(["credit", "cash"].includes(params.payment_mode))) return {bool: false, status: 400, message: "Invalid payment mode"}
-        //Filter invalid parameters
-        const filteredParams = params.filter(param => !['transfer_status', 'account_id'].includes(param))
-        return {bool: true, params: filteredParams}
+        return {bool: true, params}
     }
     //Validate credit notes request
     else if (type === 'credit_notes'){
-        //Filter invalid parameters
-        const filteredParams = params.filter(param => !['transfer_status', 'payment_mode', 'account_id'].includes(param))
-        return {bool: true, params: filteredParams}
+        return {bool: true, params}
     }
     //Validate payments requests
     else if (type === 'payments'){
         //Validate parameters
         if(params.sort_by && params.sort_by === 'title') return {bool: false, status: 400, message: "Invalid sort type"}
-        //Filter invalid parameters
-        const filteredParams = params.filter(param => !['transfer_status', 'payment_mode'].includes(param))
-        return {bool: true, params: filteredParams}
+        return {bool: true, params}
     }
     else if (type === 'refunds'){
         //Validate parameters
         if(params.sort_by && !(["amount", "balance"].includes(params.sort_by))) return {bool: false, status: 400, message: "Invalid sort type"}
-        //Filter invalid parameters
-        const filteredParams = params.filter(param => !['transfer_status', 'payment_mode'].includes(param))
-        return {bool: true, params: filteredParams}
+        return {bool: true, params}
     }
     //Handle invalid requests
     else {
@@ -395,9 +381,31 @@ function verifyGetRequest(rawParams, type){
 }
 
 //Verify request for replacing sales entry
-function verifyUpdateRequest(data, type){
+function verifyUpdateRequest(rawData, type){
+    //Define the general parameters
+    const generalWhitelist = [
+        "transactionId", "contact_id", "number", "number2", "date",
+        "currency_code", "exchange_rate", "tag_ids", "description",
+        "remarks", "title", "billing_party", "show_shipping",
+        "shipping_party", "shipping_info", "email", "files"
+    ];
+    //Define the parameters for each type
+    const typeSpecificWhitelist = {
+        quotes:         [...generalWhitelist, "tax_mode", "form_items", "term_id"],
+        orders:         [...generalWhitelist, "tax_mode", "form_items", "term_id"],
+        delivery_orders:[...generalWhitelist, "tax_mode", "form_items"],
+        invoices:       [...generalWhitelist, "tax_mode", "form_items", "customs_form_no", "customs_k2_form_no", "incoterms", "myinvois_action", "term_items", "deposit_items"],
+        credit_notes:   [...generalWhitelist, "tax_mode", "form_items", "customs_form_no", "customs_k2_form_no", "incoterms", "myinvois_action", "link_items"],
+        payments:       [...generalWhitelist, "amount", "link_items", "deposit_items"],
+        refunds:        [...generalWhitelist, "link_items", "deposit_items"],
+    };
+    //Get only valid parameters
+    let data = Object.fromEntries(
+        Object.entries(rawData).filter(([param]) => typeSpecificWhitelist[type].includes(param))
+    );
     //Check for required general parameters
-    if(!data.contact_id ||
+    if(!data.transactionId ||
+        !data.contact_id ||
         !data.number ||
         !data.date ||
         !data.currency_code ||
@@ -414,27 +422,34 @@ function verifyUpdateRequest(data, type){
         try{new Intl.NumberFormat("en", {style: 'currency', currency: data.currency_code})} catch { return {bool: false, status: 400, message: "Invalid currency code"} }
         if(data.number.length > 50 || (data.number2 && data.number2.length > 50)) return {bool: false, status: 400, message: "Invalid transaction or reference number"}
     }
-
-    if (type === 'quotes' || type === 'orders'){
-        
-    }
-    else if (type === 'delivery_orders'){
-
+    //Validate type specific parameters
+    if (["quotes", "orders", "delivery_orders", "credit_notes"].includes(type)){
+        //Check for required parameters
+        if(!data.tax_mode || !data.form_items) return {bool: false, status: 400, message: "Missing required parameter(s)"}
+        //Validate parameters
+        if(data.shipping_info && data.shipping_info.length > 100) return {bool: false, status: 400, message: "Invalid shipping info"}
+        if(data.title && data.title.length > 255) return {bool: false, status: 400, message: "Invalid title"}
+        if(!(data.tax_mode === "inclusive" || data.tax_mode === "exclusive")) return {bool: false, status: 400, message: "Invalid tax mode"}
+        //Validate credit_notes specific parameters
+        if(type === 'credit_notes'){
+            if(data.myinvois_action && !(["NORMAL", "VALIDATE", "EXTERNAL"].includes(data.myinvois_action))) return {bool: false, status: 400, message: "Invalid invoice action"}
+        }
+        return {bool: true, data}
     }
     else if (type === 'invoice'){
-
-    }
-    else if (type === 'credit_notes'){
-
+        if(data.myinvois_action && !(["NORMAL", "VALIDATE", "EXTERNAL"].includes(data.myinvois_action))) return {bool: false, status: 400, message: "Invalid invoice action"}
+        return {bool: true, data}
     }
     else if (type === 'payments'){
-
+        if(!data.deposit_items || !data.amount) return {bool: false, status: 400, message: "Missing required parameter(s)"}
+        return {bool: true, data}
     }
     else if (type === 'refunds'){
-
+        if(!data.deposit_items) return {bool: false, status: 400, message: "Missing required parameter(s)"}
+        return {bool: true, data}
     }
     else {
-        return null
+        return {bool: false, status: 404, message: "Invalid request"}
     }
 }
 
