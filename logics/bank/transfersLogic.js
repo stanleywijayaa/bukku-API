@@ -190,7 +190,7 @@ const updateTransfer = async(req, res) => {
     }catch(err){
         console.error("Failed", err.response?.data || err.message || err);
         res.status(500).json({
-        message: "Failed to update Transfer",
+        message: "Failed to update Transfer record",
         error: err.response?.data || err.message,
         });
     }
@@ -215,8 +215,41 @@ const updateTransferStatus = async(req, res) => {
   }catch(err){
     console.error("Failed", err.response?.data || err.message || err)
     res.status(500).json({
-      message: "Failed to update money-out status",
+      message: "Failed to update transfer status",
       error: err.response?.data || err.message,
     });
   }
+}
+
+const deleteTransfer = async(req, res) => {
+  const { transactionId } = req.params;
+  if(!transactionId) return res.status(400).json({message: 'transaction id is required'});
+
+  try{
+    const record = await api.get(`/transfers/${transactionId}`)
+    const curStatus = record.data.status;
+
+    if (!["draft", "void"].includes(curStatus)) {
+      return res.status(400).json({
+        message: `Cannot delete transaction with status "${curStatus}". Only draft and void can be deleted.`,
+      });
+    }
+    const response = await api.delete(`/transfers/${transactionId}`);
+    res.json(response.data)
+  }catch(err){
+    console.error("Failed", err.response?.data || err.message || err);
+    res.status(500).json({
+      message: "Failed to delete transfer record",
+      error: err.response?.data || err.message,
+    });
+  }
+}
+
+module.exports = {
+    createTransaction,
+    getTransferList,
+    getTransfer,
+    updateTransfer,
+    updateTransferStatus,
+    deleteTransfer
 }
