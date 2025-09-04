@@ -22,7 +22,7 @@ const getRefundList = async(req, res) => {
         const allowedStatus = ["draft", "pending_approval", "ready", "void"];
         const allowedPayment = ["paid", "outstanding"]
         const allowedEmailStatus = ["UNSENT", "PENDING", "SENT", "BOUNCED", "OPENED", "VIEWED"];
-        const allowedSortBy = ["number", "date", "contact_name", "number2", "title", "description", "amount", "created_at"];
+        const allowedSortBy = ["number", "date", "contact_name", "number2", "description", "amount", "created_at"];
         const allowedSortDir = ["asc", "desc"];
 
         const params = {

@@ -19,7 +19,7 @@ const getCreditList = async (req, res) => {
         const allowedPayment = ["PAID", "OUTSTANDING", "OVERDUE"]
         const allowedSearch = ["No.", "Reference No.", "Title", "Remarks", "Description", "Contact Name", "Billing Party", "Shipping Party"]
         const allowedStatus = ["draft", "pending_approval", "ready", "void"];
-        const allowedSortBy = ["number", "date", "contact_name", "number2", "title", "description", "amount", "created_at"];
+        const allowedSortBy = ["number", "date", "contact_name", "number2", "balance", "description", "amount", "created_at"];
         const allowedSortDir = ["asc", "desc"];
 
         const params = {

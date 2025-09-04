@@ -21,7 +21,7 @@ const getBillList = async(req, res) => {
         const allowedSearch = ["No.", "Reference No.", "Title", "Remarks", "Description", "Contact Name", "Billing Party", "Shipping Party"]
         const allowedMode = ["credit", "cash", "claim"]
         const allowedStatus = ["draft", "pending_approval", "ready", "void"];
-        const allowedSortBy = ["number", "date", "contact_name", "number2", "title", "description", "amount", "created_at"];
+        const allowedSortBy = ["number", "date", "contact_name", "number2", "contact2_name", "description", "amount", "balance" ,"created_at"];
         const allowedSortDir = ["asc", "desc"];
 
         const params = {
