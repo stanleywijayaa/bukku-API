@@ -4,7 +4,7 @@ const tagController = require('../../logics/controlPanel/tagLogic');
 
 router.route('/')
     .get(tagController.getTagList)
-    .post()
+    .post(tagController.createTag)
     .put()
     .patch()
     .delete()
