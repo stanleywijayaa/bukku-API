@@ -139,3 +139,17 @@ const getMoneyOutList = async (req, res) => {
     });
   }
 };
+
+const getMoneyout = async(req, res) => {
+    const { transactionId } = req.params;
+    if (!transactionId || isNaN(transactionId)) {
+      return res.status(400).json({ message: "transactionId is required and must be a number" });
+    }
+    try{
+        const response = await api.get(`/expenses/${transactionId}`);
+        res.json(response.data);
+    }catch(err){
+        console.error('Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to fetch money in record" });
+    }
+}
