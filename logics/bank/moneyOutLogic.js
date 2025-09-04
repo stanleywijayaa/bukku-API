@@ -16,6 +16,16 @@ const api = axios.create({
 
 const allowedTaxMode = ["inclusive", "exclusive"];
 const allowedStatus = ["draft", "pending_approval", "ready", "void"];
+const allowedEmailStatus = ["UNSENT", "PENDING", "SENT", "BOUNCED", "OPENED", "VIEWED"];
+const allowedSortBy = ["number", "number2", "date", "contact_name", "amount", "description", "created_at"];
+const allowedSortDir = ["asc", "desc"];
+const allowedTransitions = {
+        draft: ['pending_approval', 'ready'],
+        pending_approval: ['ready'],
+        ready: ['void'],
+        void: ['ready']
+    }
+
 
 const createMoneyOut = async(req, res) => {
     const{ 
@@ -85,3 +95,47 @@ const createMoneyOut = async(req, res) => {
         res.status(500).json({message: 'error creating money out entry'})
     }
 } 
+
+const getMoneyInList = async (req, res) => {
+  const {
+      date_from,
+      date_to,
+      search,
+      contact_id,
+      account_id,
+      status,
+      email_status,
+      page = 1,
+      page_size = 30,
+      sort_by,
+      sort_dir,
+    } = req.query;
+
+    // ✅ Build query params safely
+    const params = {
+      page: Number(page) >= 1 ? Number(page) : 1,
+      page_size: Number(page_size) > 0 ? Number(page_size) : 30,
+    };
+
+    if (date_from) params.date_from = date_from;
+    if (date_to) params.date_to = date_to;
+    if (search && search.length <= 100) params.search = search;
+    if (contact_id && !isNaN(contact_id)) params.contact_id = Number(contact_id);
+    if (account_id && !isNaN(account_id)) params.account_id = Number(account_id);
+    if (status && allowedStatus.includes(status)) params.status = status;
+    if (email_status && allowedEmailStatus.includes(email_status)) params.email_status = email_status;
+    if (sort_by && allowedSortBy.includes(sort_by)) params.sort_by = sort_by;
+    if (sort_dir && allowedSortDir.includes(sort_dir)) params.sort_dir = sort_dir;
+
+    try {
+    const response = await api.get("/expenses", {params});
+
+    res.json(response.data);
+  } catch (err) {
+    console.error("Failed", err.response?.data || err.message || err);
+    res.status(500).json({
+      message: "Failed to fetch money-out list",
+      error: err.response?.data || err.message,
+    });
+  }
+};

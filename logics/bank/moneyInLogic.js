@@ -129,12 +129,11 @@ const getMoneyInList = async (req, res) => {
     if (sort_dir && allowedSortDir.includes(sort_dir)) params.sort_dir = sort_dir;
 
     try {
-    // ✅ Make request to Bukku
     const response = await api.get("/incomes", {params});
 
     res.json(response.data);
   } catch (err) {
-    console.error("❌ Failed to fetch money-in list:", err.response?.data || err.message || err);
+    console.error("Failed", err.response?.data || err.message || err);
     res.status(500).json({
       message: "Failed to fetch money-in list",
       error: err.response?.data || err.message,
