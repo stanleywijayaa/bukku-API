@@ -44,6 +44,18 @@ const getAccountList = async(req, res) => {
     }
 }
 
+const getAccount = async(req, res) => {
+    try {
+        const {id} = req.params
+        const response = await api.get(`/accounts/${id}`)
+        res.json(response.data)
+    } catch (err){
+        console.error('❌ Failed:', err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to fetch account" });
+    }
+}
+
 module.exports = {
-    getAccountList
+    getAccountList,
+    getAccount
 }
