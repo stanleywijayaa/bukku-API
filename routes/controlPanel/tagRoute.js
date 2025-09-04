@@ -10,7 +10,7 @@ router.route('/')
     .delete()
 
 router.route('/:id')
-    .get(tagController.getTag)
+    .get(tagController.createTag)
 
 router.route('/1')
     .get()

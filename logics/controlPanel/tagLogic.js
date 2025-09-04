@@ -35,7 +35,7 @@ const getTag = async(req, res) => {
     }
 }
 
-const creteTag = async(req, res) => {
+const createTag = async(req, res) => {
     const {
         name,
         tag_group_id
