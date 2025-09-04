@@ -302,5 +302,8 @@ const deleteMoneyIn = async(req, res) => {
 module.exports = {
     createMoneyIn,
     getMoneyInList,
-    getMoneyIn
+    getMoneyIn,
+    updateMoneyIn,
+    updateMoneyInStatus,
+    deleteMoneyIn
 }
