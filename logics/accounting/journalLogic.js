@@ -161,9 +161,41 @@ const updateJournal = async(req, res) => {
     }
 }
 
+const updateJournalStatus = async (req, res) => {
+    const {id, status, void_reason} = req.body
+    if (!id || !status) return res.status(400).json({ "message": "ID and status are required"})
+    const allowedTransitions = {
+        draft: ['pending_approval', 'ready'],
+        pending_approval: ['ready'],
+        ready: ['void'],
+        void: ['ready']
+    }
+    try {
+        const journal = await api.get(`/journal_entries/${id}`)
+        const currentStatus = journal.data.status
+        if (!allowedTransitions[currentStatus]?.includes(status)) {
+            return res.status(400).json({ "message": `Invalid status transition from ${currentStatus} → ${status}`})
+        }
+        const payload = {status}
+        if (status === 'void'){
+            if(!void_reason) return res.status(400).json({ "message": "void_reason is required when voiding a transaction." });
+            payload.void_reason = void_reason
+        }
+        const result = await api.patch(`/journal_entries/${id}`, payload)
+        res.json(result.data)
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No journal entries matches ID ${id}` });
+        }
+        console.error("❌ Failed:", err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to update journal status" });
+    }
+}
+
 module.exports = {
     getJournalList,
     getJournal,
     createJournal,
-    updateJournal
+    updateJournal,
+    updateJournalStatus
 }
