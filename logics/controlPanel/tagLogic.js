@@ -77,9 +77,25 @@ const updateTag = async(req, res) => {
     }
 }
 
+const deteleTag = async (req, res) => {
+    if (!req?.body?.id) return res.status(400).json({"message": "Delete ID required"})
+    try {
+        await api.get(`/tags/${req.body.id}`)
+        const result = await api.delete(`/tags/${req.body.id}`)
+        res.json(result.data)
+    } catch (err) {
+        if (err.response?.status === 404) {
+            return res.status(404).json({ "message": `No tag matches ID ${req.body.id}` });
+        }
+        console.error("❌ Failed:", err.response?.data || err.message || err);
+        res.status(500).json({ error: "Failed to delete tag" });
+    }
+}
+
 module.exports = {
     getTagList,
     getTag,
     createTag,
-    updateTag
+    updateTag,
+    deleteTag
 }
