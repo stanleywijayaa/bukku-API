@@ -96,7 +96,7 @@ const createMoneyOut = async(req, res) => {
     }
 } 
 
-const getMoneyInList = async (req, res) => {
+const getMoneyOutList = async (req, res) => {
   const {
       date_from,
       date_to,
