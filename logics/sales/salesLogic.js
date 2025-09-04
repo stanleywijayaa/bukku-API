@@ -376,6 +376,10 @@ function verifyGetRequest(rawParams, type){
 
 //Verify request for replacing sales entry
 function verifyUpdateRequest(rawData, type){
+    //Validate route
+    if(!["quotes", "orders", "delivery_orders", "invoices", "credit_notes", "payments", "refunds"].includes(type)){
+        return {bool: false, status: 404, message: "Invalid request"}
+    }
     //Define the general parameters
     const generalWhitelist = [
         "transactionId", "contact_id", "number", "number2", "date",
@@ -397,54 +401,43 @@ function verifyUpdateRequest(rawData, type){
     let data = Object.fromEntries(
         Object.entries(rawData).filter(([param]) => typeSpecificWhitelist[type].includes(param))
     );
-    //Check for required general parameters
-    if(!data.transactionId ||
-        !data.contact_id ||
-        !data.number ||
-        !data.date ||
-        !data.currency_code ||
-        !data.exchange_rate
-    ){
-        return {bool: false, status: 400, message: "Missing required parameter(s)"}
-    }
+    //Define general required parameters
+    const generalRequired = [
+        "transactionId", "contact_id", "number",
+        "date", "currency_code", "exchange_rate"
+    ]
+    //Define type specific required parameters
+    const typeSpecificRequired = {
+        quotes:         [...generalRequired, "tax_mode", "form_items"],
+        orders:         [...generalRequired, "tax_mode", "form_items"],
+        delivery_orders:[...generalRequired, "tax_mode", "form_items"],
+        invoices:       [...generalRequired],
+        credit_notes:   [...generalRequired],
+        payments:       [...generalRequired, "deposit_items", "amount"],
+        refunds:        [...generalRequired, "deposit_items"],
+    }   
+    //Check for required parameters
+    const provided = Object.keys(data);
+    const missing = typeSpecificRequired[type].filter(param => !provided.includes(param));
+    //Return missing parameter(s) message
+    if (missing.length > 0) return { bool: false, status: 400, message: `Missing required parameter(s): ${missing.join(", ")}`}
+
     //Validate general parameters
-    else{
-        if(data.tag_ids && data.tag_ids.length > 4) return {bool: false, status: 400, message: "Invalid tag"}
-        if(!(/^\d{4}-\d{2}-\d{2}$/.test(data.date))) return {bool: false, status: 400, message: "Invalid date"}
-        if(data.description && data.description.length > 255) return {bool: false, status: 400, message: "Invalid description"}
-        if(!(["draft", "pending_approval", "ready"].includes(data.status))) return {bool: false, status: 400, message: "Invalid status"}
-        try{new Intl.NumberFormat("en", {style: 'currency', currency: data.currency_code})} catch { return {bool: false, status: 400, message: "Invalid currency code"} }
-        if(data.number.length > 50 || (data.number2 && data.number2.length > 50)) return {bool: false, status: 400, message: "Invalid transaction or reference number"}
-    }
+    if(data.tag_ids && data.tag_ids.length > 4) return {bool: false, status: 400, message: "Invalid tag"}
+    if(!(/^\d{4}-\d{2}-\d{2}$/.test(data.date))) return {bool: false, status: 400, message: "Invalid date"}
+    if(data.description && data.description.length > 255) return {bool: false, status: 400, message: "Invalid description"}
+    if(!(["draft", "pending_approval", "ready"].includes(data.status))) return {bool: false, status: 400, message: "Invalid status"}
+    try{new Intl.NumberFormat("en", {style: 'currency', currency: data.currency_code})} catch { return {bool: false, status: 400, message: "Invalid currency code"} }
+    if(data.number.length > 50 || (data.number2 && data.number2.length > 50)) return {bool: false, status: 400, message: "Invalid transaction or reference number"}
+
     //Validate type specific parameters
-    if (["quotes", "orders", "delivery_orders", "credit_notes"].includes(type)){
-        //Check for required parameters
-        if(!data.tax_mode || !data.form_items) return {bool: false, status: 400, message: "Missing required parameter(s)"}
-        //Validate parameters
-        if(data.shipping_info && data.shipping_info.length > 100) return {bool: false, status: 400, message: "Invalid shipping info"}
-        if(data.title && data.title.length > 255) return {bool: false, status: 400, message: "Invalid title"}
-        if(!(data.tax_mode === "inclusive" || data.tax_mode === "exclusive")) return {bool: false, status: 400, message: "Invalid tax mode"}
-        //Validate credit_notes specific parameters
-        if(type === 'credit_notes'){
-            if(data.myinvois_action && !(["NORMAL", "VALIDATE", "EXTERNAL"].includes(data.myinvois_action))) return {bool: false, status: 400, message: "Invalid invoice action"}
-        }
-        return {bool: true, data}
-    }
-    else if (type === 'invoice'){
-        if(data.myinvois_action && !(["NORMAL", "VALIDATE", "EXTERNAL"].includes(data.myinvois_action))) return {bool: false, status: 400, message: "Invalid invoice action"}
-        return {bool: true, data}
-    }
-    else if (type === 'payments'){
-        if(!data.deposit_items || !data.amount) return {bool: false, status: 400, message: "Missing required parameter(s)"}
-        return {bool: true, data}
-    }
-    else if (type === 'refunds'){
-        if(!data.deposit_items) return {bool: false, status: 400, message: "Missing required parameter(s)"}
-        return {bool: true, data}
-    }
-    else {
-        return {bool: false, status: 404, message: "Invalid request"}
-    }
+    if(data.shipping_info && data.shipping_info.length > 100) return {bool: false, status: 400, message: "Invalid shipping info"}
+    if(data.title && data.title.length > 255) return {bool: false, status: 400, message: "Invalid title"}
+    if(!(data.tax_mode === "inclusive" || data.tax_mode === "exclusive")) return {bool: false, status: 400, message: "Invalid tax mode"}
+    if(data.myinvois_action && !(["NORMAL", "VALIDATE", "EXTERNAL"].includes(data.myinvois_action))) return {bool: false, status: 400, message: "Invalid invoice action"}
+    
+    //Return filtered parameters
+    return {bool: true, data}
 }
 
 //Verify request for updating sales status
