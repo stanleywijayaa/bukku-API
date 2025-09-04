@@ -77,7 +77,7 @@ const updateTag = async(req, res) => {
     }
 }
 
-const deteleTag = async (req, res) => {
+const deleteTag = async (req, res) => {
     if (!req?.body?.id) return res.status(400).json({"message": "Delete ID required"})
     try {
         await api.get(`/tags/${req.body.id}`)
