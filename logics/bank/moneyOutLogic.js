@@ -246,7 +246,7 @@ const updateMoneyOutStatus = async(req, res) => {
   const { transactionId, status, void_reason} = req.body;
   if(!transactionId)return res.status(400).json({message: 'transaction id is required'});
   try{
-    const record = await api.get(`/incomes/${transactionId}`);
+    const record = await api.get(`/expenses/${transactionId}`);
     const curStatus = record.data.status;
     if (!allowedTransitions[curStatus]?.includes(status)) {
             return res.status(400).json({ "message": `Invalid status transition from ${curStatus} → ${status}`})
