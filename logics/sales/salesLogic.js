@@ -150,6 +150,10 @@ const patchSales = async (req,res) => {
     const id = req.query?.id
     //Get the transaction status and reason if void
     const param = req.body
+    //Check for valid request type
+    if(!["quotes", "orders", "delivery_orders", "invoices", "credit_notes", "payments", "refunds"].includes(type)){
+        return res.status(404).json({message: "Invalid request"})
+    }
     //Check if the id and status exists
     if (!id) return res.status(400).json({message: 'ID is required'})
     if (!param?.status) return res.status(400).json({message: 'Status is required'})
@@ -167,23 +171,13 @@ const patchSales = async (req,res) => {
             return res.status(500).json({ message: "No transaction status found in existing transaction" });
         }
 
-        //Define the allowed paths
-        const allowedUpdate = {
-            draft: ["pending_approval", "ready"],
-            pending_approval: ["ready"],
-            ready: ["void"],
-            void: ["ready"]
+        //Request validation
+        const valid = verifyPatchRequest(param, currentStatus)
+        if (!valid.bool) {
+            return res.status(valid.status).json({ message: valid.message })
         }
-        
-        //Check if the update path is allowed
-        if(!allowedUpdate[currentStatus].includes(param.status)){
-            return res.status(400).json({message: 'Update not allowed'})
-        }
-
-        //Check for reason when voiding transaction
-        if(param.status == 'void' && !param.void_reason){
-            return res.status(400).json({message: 'Voiding transaction without reason'})
-        }
+        //Get the valid parameters
+        let param = valid.data
 
         //Patch the sales
         const response = await api.patch(`${type}/${id}`, param)
@@ -453,19 +447,45 @@ function verifyUpdateRequest(rawData, type){
     }
 }
 
-function verifyPatchRequest(body,type){
-    if (type === 'quotes' || type === 'orders' || type === 'delivery_orders' || type === 'invoice' || type === 'credit_notes'){
-        
-    }
-    else if (type === 'payments'){
+//Verify request for updating sales status
+function verifyPatchRequest(rawData, currentStatus){
+    //Define parameters
+    const whitelist = [
+        "transactionId", "status", "void_reason"
+    ];
+    //Define required parameters
+    const required = [
+        "transactionId", "status"
+    ]
+    //Get only valid parameters
+    let data = Object.fromEntries(
+        Object.entries(rawData).filter(([param]) => whitelist.includes(param))
+    )
+    //Check for required parameters
+    const missing = required.filter(param => !Object.keys(data).includes(param));
 
+    if (missing.length > 0) {
+        return {bool: false, status: 400, message: "Missing required parameter(s)"}
     }
-    else if (type === 'refunds'){
 
+    const allowedUpdate = {
+        draft: ["pending_approval", "ready"],
+        pending_approval: ["ready"],
+        ready: ["void"],
+        void: ["ready"]
     }
-    else {
-        return null
+
+    //Check if the update path is allowed
+    if (!allowedUpdate[currentStatus].includes(data.status)) {
+        return {bool: false, status: 400, message: 'Update not allowed'}
     }
+
+    //Check for reason when voiding transaction
+    if (data.status == 'void' && !data.void_reason) {
+        return {bool: false, status: 400, message: 'Voiding transaction without reason'}
+    }
+
+    return {bool: true, data}
 }
 
 module.exports = {
